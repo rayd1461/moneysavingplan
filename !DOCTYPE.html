@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>每日30元存錢計畫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .day-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 0.5rem;
+        }
+        @media (min-width: 640px) {
+            .day-grid {
+                grid-template-columns: repeat(10, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <header class="text-center mb-6 sm:mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">每日30元存錢計畫</h1>
+            <div id="summary" class="text-xl sm:text-2xl font-semibold text-green-600">
+                總金額：0 元（應存金額：0 元，達成率：0%）
+            </div>
+        </header>
+
+        <div id="month-buttons" class="flex flex-wrap justify-center gap-2 mb-6">
+            </div>
+
+        <div id="all-months">
+            </div>
+        
+        <div id="emergency-fund-section" class="mt-8 pt-6 border-t border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">臨時急用金</h2>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <button id="withdraw-btn" class="px-6 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition-colors duration-200">
+                    提領急用金
+                </button>
+                <button id="repay-btn" class="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition-colors duration-200">
+                    歸還急用金
+                </button>
+            </div>
+            
+            <div id="emergency-fund-summary" class="bg-gray-50 p-4 rounded-lg shadow-inner mb-4">
+                <p class="text-lg font-semibold text-gray-700">總提領：<span id="total-withdrawn" class="text-red-500">0</span> 元</p>
+                <p class="text-lg font-semibold text-gray-700">總歸還：<span id="total-repaid" class="text-blue-500">0</span> 元</p>
+                <p class="text-xl font-bold mt-2">未還金額：<span id="outstanding-amount" class="text-red-700">0</span> 元</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">類型</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">備註</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emergency-fund-table-body" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="message-box" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-2xl">
+                <p id="message-text" class="text-lg font-semibold text-gray-800 mb-4"></p>
+                <button id="message-ok-btn" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">好的</button>
+            </div>
+        </div>
+        
+        <div id="input-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4"></h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="input-amount" class="block text-sm font-medium text-gray-700">金額 (元)</label>
+                        <input type="number" id="input-amount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div>
+                        <label for="input-date" class="block text-sm font-medium text-gray-700">日期</label>
+                        <input type="date" id="input-date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div>
+                        <label for="input-note" class="block text-sm font-medium text-gray-700">備註 (選填)</label>
+                        <input type="text" id="input-note" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">取消</button>
+                    <button id="modal-save-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 定義存錢計畫的起始和結束日期、每日金額
+        const startDate = new Date("2025-05-27");
+        const endDate = new Date("2026-03-07");
+        const savingPerDay = 30;
+
+        // 定義 localStorage 儲存鍵值
+        const checkedKey = "saving_checked_days";
+        const monthlyExtraKey = "saving_monthly_extra";
+        const emergencyFundKey = "saving_emergency_fund";
+
+        // 取得 localStorage 中的資料
+        const checkedDays = new Set(JSON.parse(localStorage.getItem(checkedKey)) || []);
+        const monthlyExtras = JSON.parse(localStorage.getItem(monthlyExtraKey)) || {};
+        const emergencyFundRecords = JSON.parse(localStorage.getItem(emergencyFundKey)) || [];
+
+        // 取得 HTML 元素
+        const summaryDiv = document.getElementById("summary");
+        const monthButtonsDiv = document.getElementById("month-buttons");
+        const allMonthsDiv = document.getElementById("all-months");
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageOkBtn = document.getElementById('message-ok-btn');
+        const inputModal = document.getElementById('input-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const inputAmount = document.getElementById('input-amount');
+        const inputDate = document.getElementById('input-date');
+        const inputNote = document.getElementById('input-note');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const withdrawBtn = document.getElementById('withdraw-btn');
+        const repayBtn = document.getElementById('repay-btn');
+        const emergencyFundTableBody = document.getElementById('emergency-fund-table-body');
+        const totalWithdrawnSpan = document.getElementById('total-withdrawn');
+        const totalRepaidSpan = document.getElementById('total-repaid');
+        const outstandingAmountSpan = document.getElementById('outstanding-amount');
+
+        let currentOpenMonth = null;
+        let currentModalAction = ''; // 'withdraw' or 'repay'
+
+        /**
+         * 顯示自定義訊息彈窗。
+         * @param {string} message - 要顯示的訊息文字。
+         */
+        const showMessage = (message) => {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('flex');
+        };
+
+        /**
+         * 隱藏自定義訊息彈窗。
+         */
+        const hideMessage = () => {
+            messageBox.classList.remove('flex');
+            messageBox.classList.add('hidden');
+        };
+        messageOkBtn.addEventListener('click', hideMessage);
+
+        /**
+         * 顯示輸入彈窗。
+         * @param {string} title - 彈窗標題。
+         * @param {string} action - 'withdraw' or 'repay'。
+         */
+        const showInputModal = (title, action) => {
+            currentModalAction = action;
+            modalTitle.textContent = title;
+            inputAmount.value = '';
+            inputDate.valueAsDate = new Date(); // 預設為今天
+            inputNote.value = '';
+            inputModal.classList.remove('hidden');
+            inputModal.classList.add('flex');
+        };
+
+        /**
+         * 隱藏輸入彈窗。
+         */
+        const hideInputModal = () => {
+            inputModal.classList.remove('flex');
+            inputModal.classList.add('hidden');
+        };
+        modalCancelBtn.addEventListener('click', hideInputModal);
+
+        /**
+         * 取得日期的 ISO 格式字串（只包含年-月-日）。
+         * @param {Date} date - 日期物件。
+         * @returns {string} - 年-月-日 字串。
+         */
+        function getDateKey(date) {
+            return date.toISOString().split("T")[0];
+        }
+
+        /**
+         * 格式化月份鍵值為年-月字串。
+         * @param {number} year - 年份。
+         * @param {number} month - 月份（0-11）。
+         * @returns {string} - 年-月 字串。
+         */
+        function formatMonthKey(year, month) {
+            return `${year}-${(month + 1).toString().padStart(2, "0")}`;
+        }
+
+        /**
+         * 檢查日期是否在存錢計畫的範圍內。
+         * @param {Date} date - 日期物件。
+         * @returns {boolean} - 是否在範圍內。
+         */
+        function isInRange(date) {
+            const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+            
+            return checkDate.getTime() >= start.getTime() && checkDate.getTime() <= end.getTime();
+        }
+
+        /**
+         * 更新頁面上的總結資訊。
+         */
+        function updateSummary() {
+            const totalDaily = checkedDays.size * savingPerDay;
+            const totalExtra = Object.values(monthlyExtras).reduce((a, b) => a + Number(b), 0);
+            
+            let totalDays = 0;
+            let d = new Date(startDate);
+            const tempEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+            while (d.getFullYear() < tempEndDate.getFullYear() || 
+                   (d.getFullYear() === tempEndDate.getFullYear() && d.getMonth() < tempEndDate.getMonth()) ||
+                   (d.getFullYear() === tempEndDate.getFullYear() && d.getMonth() === tempEndDate.getMonth() && d.getDate() <= tempEndDate.getDate())) {
+                totalDays++;
+                d.setDate(d.getDate() + 1);
+            }
+
+            const shouldSave = totalDays * savingPerDay;
+            
+            const totalWithdrawn = emergencyFundRecords.filter(r => r.type === 'withdraw').reduce((sum, r) => sum + r.amount, 0);
+            const totalRepaid = emergencyFundRecords.filter(r => r.type === 'repay').reduce((sum, r) => sum + r.amount, 0);
+            const outstandingAmount = totalWithdrawn - totalRepaid;
+
+            const totalSaved = totalDaily + totalExtra - outstandingAmount;
+            const percent = shouldSave > 0 ? ((totalSaved / shouldSave) * 100).toFixed(2) : 0;
+
+            summaryDiv.innerHTML = `
+                總金額：<span class="font-bold text-green-600">${totalSaved}</span> 元
+                （應存金額：<span class="font-bold">${shouldSave}</span> 元，達成率：<span class="font-bold">${percent}</span>%）
+            `;
+            
+            totalWithdrawnSpan.textContent = totalWithdrawn;
+            totalRepaidSpan.textContent = totalRepaid;
+            outstandingAmountSpan.textContent = outstandingAmount;
+            
+            renderEmergencyFundRecords();
+        }
+
+        /**
+         * 標記或取消標記日期。
+         * @param {string} dateStr - 日期字串。
+         * @param {HTMLElement} el - 日期元素。
+         */
+        function toggleCheck(dateStr, el) {
+            if (checkedDays.has(dateStr)) {
+                checkedDays.delete(dateStr);
+                el.classList.remove("bg-green-600", "text-white");
+            } else {
+                checkedDays.add(dateStr);
+                el.classList.add("bg-green-600", "text-white");
+            }
+            localStorage.setItem(checkedKey, JSON.stringify([...checkedDays]));
+            updateSummary();
+        }
+
+        /**
+         * 根據年、月創建一個月份的視圖容器。
+         * @param {number} year - 年份。
+         * @param {number} month - 月份（0-11）。
+         * @returns {HTMLElement} - 月份視圖的容器元素。
+         */
+        function createMonthView(year, month) {
+            const container = document.createElement("div");
+            container.className = "month-container hidden flex-wrap gap-2 mb-4 p-4 rounded-lg bg-gray-50 shadow-inner";
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const dayGrid = document.createElement("div");
+            dayGrid.className = "day-grid";
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                
+                if (!isInRange(date)) {
+                    continue;
+                }
+
+                const dateStr = getDateKey(date);
+                const div = document.createElement("div");
+                div.className = "day border border-gray-300 p-2 text-center rounded-md cursor-pointer transition-colors duration-200 hover:bg-gray-200 w-20";
+                div.innerText = `${month + 1}/${day}`;
+                if (checkedDays.has(dateStr)) {
+                    div.classList.add("bg-green-600", "text-white");
+                }
+                div.onclick = () => toggleCheck(dateStr, div);
+                dayGrid.appendChild(div);
+            }
+            
+            container.appendChild(dayGrid);
+
+            const monthKey = formatMonthKey(year, month);
+            const inputContainer = document.createElement("div");
+            inputContainer.className = "input-container mt-4 flex items-center gap-2 flex-wrap";
+
+            const inputLabel = document.createElement("label");
+            inputLabel.className = "font-medium text-gray-700";
+            inputLabel.textContent = `本月額外收入：`;
+
+            const input = document.createElement("input");
+            input.type = "number";
+            input.className = "px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 w-32";
+            input.placeholder = "元";
+            input.value = monthlyExtras[monthKey] || "";
+            input.onkeydown = (e) => {
+                if (e.key === "Enter") {
+                    monthlyExtras[monthKey] = input.value ? parseInt(input.value) : 0;
+                    localStorage.setItem(monthlyExtraKey, JSON.stringify(monthlyExtras));
+                    updateSummary();
+                    showMessage('額外收入已儲存！');
+                }
+            };
+
+            inputContainer.appendChild(inputLabel);
+            inputContainer.appendChild(input);
+            container.appendChild(inputContainer);
+
+            return container;
+        }
+
+        /**
+         * 創建月份按鈕並將月份視圖加入到頁面中。
+         */
+        function createInterface() {
+            // 這邊直接使用原來的月份陣列
+            const months = [
+                [2025, 4], [2025, 5], [2025, 6], [2025, 7], [2025, 8], [2025, 9], [2025, 10], [2025, 11],
+                [2026, 0], [2026, 1], [2026, 2]
+            ];
+
+            months.forEach(([year, month]) => {
+                const button = document.createElement("button");
+                button.className = "month-button px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition-colors duration-200";
+                button.textContent = `${year}/${month + 1}`;
+                monthButtonsDiv.appendChild(button);
+
+                const monthDiv = createMonthView(year, month);
+                allMonthsDiv.appendChild(monthDiv);
+
+                button.onclick = () => {
+                    if (currentOpenMonth && currentOpenMonth !== monthDiv) {
+                        currentOpenMonth.classList.add("hidden");
+                    }
+                    const isOpen = !monthDiv.classList.contains("hidden");
+                    if (isOpen) {
+                        monthDiv.classList.add("hidden");
+                        currentOpenMonth = null;
+                    } else {
+                        monthDiv.classList.remove("hidden");
+                        currentOpenMonth = monthDiv;
+                    }
+                };
+            });
+        }
+
+        /**
+         * 渲染急用金紀錄表格。
+         */
+        function renderEmergencyFundRecords() {
+            emergencyFundTableBody.innerHTML = '';
+            emergencyFundRecords.forEach((record, index) => {
+                const row = document.createElement('tr');
+                const typeClass = record.type === 'withdraw' ? 'text-red-500' : 'text-blue-500';
+                const typeText = record.type === 'withdraw' ? '提領' : '歸還';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${typeClass}">${typeText}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.amount} 元</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.note}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-red-600 hover:text-red-900" onclick="deleteRecord(${index})">刪除</button>
+                    </td>
+                `;
+                emergencyFundTableBody.appendChild(row);
+            });
+        }
+        
+        /**
+         * 處理提領/歸還急用金的儲存。
+         */
+        modalSaveBtn.addEventListener('click', () => {
+            const amount = parseInt(inputAmount.value);
+            const date = inputDate.value;
+            const note = inputNote.value || '';
+            
+            if (isNaN(amount) || amount <= 0 || !date) {
+                showMessage('請輸入有效的金額和日期！');
+                return;
+            }
+            
+            const newRecord = {
+                id: Date.now(), // 用時間戳記作為唯一ID
+                type: currentModalAction,
+                amount: amount,
+                date: date,
+                note: note,
+            };
+            
+            emergencyFundRecords.push(newRecord);
+            localStorage.setItem(emergencyFundKey, JSON.stringify(emergencyFundRecords));
+            updateSummary();
+            hideInputModal();
+            showMessage('紀錄已儲存！');
+        });
+        
+        /**
+         * 刪除急用金紀錄。
+         * @param {number} index - 要刪除的紀錄在陣列中的索引。
+         */
+        window.deleteRecord = (index) => {
+            if (confirm('確定要刪除這筆紀錄嗎？')) {
+                emergencyFundRecords.splice(index, 1);
+                localStorage.setItem(emergencyFundKey, JSON.stringify(emergencyFundRecords));
+                updateSummary();
+                showMessage('紀錄已刪除！');
+            }
+        };
+
+        // 綁定按鈕事件
+        withdrawBtn.addEventListener('click', () => showInputModal('提領急用金', 'withdraw'));
+        repayBtn.addEventListener('click', () => showInputModal('歸還急用金', 'repay'));
+
+        // 初始化：載入資料並渲染頁面
+        createInterface();
+        updateSummary();
+    </script>
+</body>
+</html>

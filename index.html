@@ -74,6 +74,76 @@
             </div>
         </div>
 
+        <div id="dividend-section" class="mt-8 pt-6 border-t border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">股息發放紀錄</h2>
+            
+            <form id="dividend-form" class="bg-gray-50 p-4 rounded-lg shadow-inner mb-6 space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label for="stock-id" class="block text-sm font-medium text-gray-700">❶ 股名/股號</label>
+                        <input type="text" id="stock-id" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div>
+                        <label for="ex-dividend-date" class="block text-sm font-medium text-gray-700">❷ 除息日期</label>
+                        <input type="date" id="ex-dividend-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div>
+                        <label for="payout-date" class="block text-sm font-medium text-gray-700">❸ 股息發放日期</label>
+                        <input type="date" id="payout-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label for="shares-held" class="block text-sm font-medium text-gray-700">❹ 持有股數</label>
+                        <input type="number" id="shares-held" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div>
+                        <label for="dividend-per-share" class="block text-sm font-medium text-gray-700">❺ 每股股利 (元)</label>
+                        <input type="number" step="0.001" id="dividend-per-share" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200">
+                            紀錄股息
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <h3 class="text-xl font-bold text-gray-800 mb-2">發放紀錄總覽</h3>
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">股名/股號</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">除息日期</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">發放日期</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">持有股數</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">每股股利</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">總股息 (元)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dividend-table-body" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800 mb-2">已留存股票資訊 (股名/股號 & 每股股利)</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">股名/股號</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最後紀錄股利</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-info-table-body" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        
         <div id="message-box" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
             <div class="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-2xl">
                 <p id="message-text" class="text-lg font-semibold text-gray-800 mb-4"></p>
@@ -107,9 +177,8 @@
     </div>
 
     <script>
-        // 定義存錢計畫的起始和結束日期、每日金額
+        // *** 變數定義 (已更新) ***
         const startDate = new Date("2025-05-27");
-        // *** 這裡已從 2026-03-07 修改為 2026-11-01 ***
         const endDate = new Date("2026-11-01"); 
         const savingPerDay = 30;
 
@@ -117,11 +186,18 @@
         const checkedKey = "saving_checked_days";
         const monthlyExtraKey = "saving_monthly_extra";
         const emergencyFundKey = "saving_emergency_fund";
+        // 新增股息相關的儲存鍵值
+        const dividendKey = "saving_dividend_records";
+        const stockInfoKey = "saving_stock_info"; // 儲存股名/股號與每股股利
 
         // 取得 localStorage 中的資料
         const checkedDays = new Set(JSON.parse(localStorage.getItem(checkedKey)) || []);
         const monthlyExtras = JSON.parse(localStorage.getItem(monthlyExtraKey)) || {};
         const emergencyFundRecords = JSON.parse(localStorage.getItem(emergencyFundKey)) || [];
+        // 取得新增的股息相關資料
+        const dividendRecords = JSON.parse(localStorage.getItem(dividendKey)) || [];
+        // 股票資訊使用 Map 結構，方便查找和更新
+        const stockInfo = new Map(JSON.parse(localStorage.getItem(stockInfoKey)) || []);
 
         // 取得 HTML 元素
         const summaryDiv = document.getElementById("summary");
@@ -143,6 +219,11 @@
         const totalWithdrawnSpan = document.getElementById('total-withdrawn');
         const totalRepaidSpan = document.getElementById('total-repaid');
         const outstandingAmountSpan = document.getElementById('outstanding-amount');
+        // 新增股息相關的 HTML 元素
+        const dividendForm = document.getElementById('dividend-form');
+        const dividendTableBody = document.getElementById('dividend-table-body');
+        const stockInfoTableBody = document.getElementById('stock-info-table-body');
+
 
         let currentOpenMonth = null;
         let currentModalAction = ''; // 'withdraw' or 'repay'
@@ -228,6 +309,8 @@
         function updateSummary() {
             const totalDaily = checkedDays.size * savingPerDay;
             const totalExtra = Object.values(monthlyExtras).reduce((a, b) => a + Number(b), 0);
+            // 計算股息總金額
+            const totalDividend = dividendRecords.reduce((sum, r) => sum + r.totalDividend, 0);
             
             let totalDays = 0;
             let d = new Date(startDate);
@@ -245,11 +328,12 @@
             const totalRepaid = emergencyFundRecords.filter(r => r.type === 'repay').reduce((sum, r) => sum + r.amount, 0);
             const outstandingAmount = totalWithdrawn - totalRepaid;
 
-            const totalSaved = totalDaily + totalExtra - outstandingAmount;
+            // 總金額 = 每日存款 + 額外收入 + 總股息 - 未還急用金
+            const totalSaved = totalDaily + totalExtra + totalDividend - outstandingAmount;
             const percent = shouldSave > 0 ? ((totalSaved / shouldSave) * 100).toFixed(2) : 0;
 
             summaryDiv.innerHTML = `
-                總金額：<span class="font-bold text-green-600">${totalSaved}</span> 元
+                總金額：<span class="font-bold text-green-600">${totalSaved.toFixed(2)}</span> 元
                 （應存金額：<span class="font-bold">${shouldSave}</span> 元，達成率：<span class="font-bold">${percent}</span>%）
             `;
             
@@ -258,6 +342,8 @@
             outstandingAmountSpan.textContent = outstandingAmount;
             
             renderEmergencyFundRecords();
+            renderDividendRecords(); // 渲染股息紀錄
+            renderStockInfoList(); // 渲染股票資訊列表
         }
 
         /**
@@ -345,7 +431,6 @@
          * 創建月份按鈕並將月份視圖加入到頁面中。
          */
         function createInterface() {
-            // *** 月份陣列已更新，延長至 2026 年 11 月 ***
             const months = [
                 [2025, 4], [2025, 5], [2025, 6], [2025, 7], [2025, 8], [2025, 9], [2025, 10], [2025, 11],
                 [2026, 0], [2026, 1], [2026, 2], [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], 
@@ -393,7 +478,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.amount} 元</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.note}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-red-600 hover:text-red-900" onclick="deleteRecord(${index})">刪除</button>
+                        <button class="text-red-600 hover:text-red-900" onclick="deleteEmergencyRecord(${index})">刪除</button>
                     </td>
                 `;
                 emergencyFundTableBody.appendChild(row);
@@ -401,8 +486,23 @@
         }
         
         /**
-         * 處理提領/歸還急用金的儲存。
+         * 刪除急用金紀錄。
+         * @param {number} index - 要刪除的紀錄在陣列中的索引。
          */
+        window.deleteEmergencyRecord = (index) => {
+            if (confirm('確定要刪除這筆急用金紀錄嗎？')) {
+                emergencyFundRecords.splice(index, 1);
+                localStorage.setItem(emergencyFundKey, JSON.stringify(emergencyFundRecords));
+                updateSummary();
+                showMessage('急用金紀錄已刪除！');
+            }
+        };
+
+        // 綁定急用金按鈕事件
+        withdrawBtn.addEventListener('click', () => showInputModal('提領急用金', 'withdraw'));
+        repayBtn.addEventListener('click', () => showInputModal('歸還急用金', 'repay'));
+
+        // 處理提領/歸還急用金的儲存。
         modalSaveBtn.addEventListener('click', () => {
             const amount = parseInt(inputAmount.value);
             const date = inputDate.value;
@@ -414,7 +514,7 @@
             }
             
             const newRecord = {
-                id: Date.now(), // 用時間戳記作為唯一ID
+                id: Date.now(),
                 type: currentModalAction,
                 amount: amount,
                 date: date,
@@ -425,25 +525,122 @@
             localStorage.setItem(emergencyFundKey, JSON.stringify(emergencyFundRecords));
             updateSummary();
             hideInputModal();
-            showMessage('紀錄已儲存！');
+            showMessage('急用金紀錄已儲存！');
         });
+
+        // *** 股息紀錄函數 ***
         
         /**
-         * 刪除急用金紀錄。
+         * 渲染股息發放紀錄表格。
+         */
+        function renderDividendRecords() {
+            dividendTableBody.innerHTML = '';
+            dividendRecords.forEach((record, index) => {
+                const row = document.createElement('tr');
+                const totalAmount = (record.sharesHeld * record.dividendPerShare).toFixed(2);
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.stockID}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.exDividendDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.payoutDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.sharesHeld}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.dividendPerShare.toFixed(3)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalAmount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-red-600 hover:text-red-900" onclick="deleteDividendRecord(${index})">刪除</button>
+                    </td>
+                `;
+                dividendTableBody.appendChild(row);
+            });
+        }
+        
+        /**
+         * 刪除股息發放紀錄。
          * @param {number} index - 要刪除的紀錄在陣列中的索引。
          */
-        window.deleteRecord = (index) => {
-            if (confirm('確定要刪除這筆紀錄嗎？')) {
-                emergencyFundRecords.splice(index, 1);
-                localStorage.setItem(emergencyFundKey, JSON.stringify(emergencyFundRecords));
+        window.deleteDividendRecord = (index) => {
+            if (confirm('確定要刪除這筆股息紀錄嗎？')) {
+                dividendRecords.splice(index, 1);
+                localStorage.setItem(dividendKey, JSON.stringify(dividendRecords));
                 updateSummary();
-                showMessage('紀錄已刪除！');
+                showMessage('股息紀錄已刪除！');
             }
         };
 
-        // 綁定按鈕事件
-        withdrawBtn.addEventListener('click', () => showInputModal('提領急用金', 'withdraw'));
-        repayBtn.addEventListener('click', () => showInputModal('歸還急用金', 'repay'));
+        /**
+         * 渲染已儲存的股票資訊列表。
+         */
+        function renderStockInfoList() {
+            stockInfoTableBody.innerHTML = '';
+            // 將 Map 轉換為陣列進行迭代
+            Array.from(stockInfo.entries()).forEach(([stockID, info]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${stockID}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${info.dividendPerShare.toFixed(3)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-red-600 hover:text-red-900" onclick="deleteStockInfo('${stockID}')">刪除</button>
+                    </td>
+                `;
+                stockInfoTableBody.appendChild(row);
+            });
+        }
+        
+        /**
+         * 刪除留存的股票資訊。
+         * @param {string} stockID - 要刪除的股名/股號。
+         */
+        window.deleteStockInfo = (stockID) => {
+            if (confirm(`確定要刪除股票 ${stockID} 的留存資訊嗎？`)) {
+                stockInfo.delete(stockID);
+                localStorage.setItem(stockInfoKey, JSON.stringify(Array.from(stockInfo.entries())));
+                renderStockInfoList();
+                showMessage(`股票 ${stockID} 的資訊已刪除！`);
+            }
+        };
+
+        /**
+         * 處理股息表單提交。
+         */
+        dividendForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const stockID = document.getElementById('stock-id').value.trim();
+            const exDividendDate = document.getElementById('ex-dividend-date').value;
+            const payoutDate = document.getElementById('payout-date').value;
+            const sharesHeld = parseInt(document.getElementById('shares-held').value);
+            const dividendPerShare = parseFloat(document.getElementById('dividend-per-share').value);
+
+            if (!stockID || !exDividendDate || !payoutDate || isNaN(sharesHeld) || sharesHeld <= 0 || isNaN(dividendPerShare) || dividendPerShare <= 0) {
+                showMessage('請檢查所有股息欄位是否都已正確填寫！');
+                return;
+            }
+
+            const totalDividend = sharesHeld * dividendPerShare;
+            
+            const newRecord = {
+                id: Date.now(),
+                stockID: stockID,
+                exDividendDate: exDividendDate,
+                payoutDate: payoutDate,
+                sharesHeld: sharesHeld,
+                dividendPerShare: dividendPerShare,
+                totalDividend: totalDividend,
+            };
+            
+            // 1. 儲存股息發放紀錄
+            dividendRecords.push(newRecord);
+            localStorage.setItem(dividendKey, JSON.stringify(dividendRecords));
+
+            // 2. 儲存股票資訊 (股名/股號 & 每股股利)
+            stockInfo.set(stockID, { dividendPerShare: dividendPerShare });
+            localStorage.setItem(stockInfoKey, JSON.stringify(Array.from(stockInfo.entries())));
+
+            // 3. 更新頁面
+            updateSummary();
+            dividendForm.reset(); // 清空表單
+            showMessage(`股息紀錄已儲存！總金額：${totalDividend.toFixed(2)} 元`);
+        });
 
         // 初始化：載入資料並渲染頁面
         createInterface();

@@ -135,6 +135,7 @@
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">股名/股號</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最後紀錄股利</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">快速填寫</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                         </tr>
                     </thead>
@@ -187,7 +188,7 @@
         const monthlyExtraKey = "saving_monthly_extra";
         const emergencyFundKey = "saving_emergency_fund";
         const dividendKey = "saving_dividend_records";
-        const stockInfoKey = "saving_stock_info"; // 儲存股名/股號與每股股利
+        const stockInfoKey = "saving_stock_info"; 
 
         // 取得 localStorage 中的資料
         const checkedDays = new Set(JSON.parse(localStorage.getItem(checkedKey)) || []);
@@ -220,6 +221,11 @@
         const dividendForm = document.getElementById('dividend-form');
         const dividendTableBody = document.getElementById('dividend-table-body');
         const stockInfoTableBody = document.getElementById('stock-info-table-body');
+
+        // 獲取股息表單輸入元素
+        const stockIdInput = document.getElementById('stock-id');
+        const dividendPerShareInput = document.getElementById('dividend-per-share');
+        // ... (其他股息表單元素如果需要，請在這裡新增)
 
 
         let currentOpenMonth = null;
@@ -310,7 +316,6 @@
             const totalExtra = Object.values(monthlyExtras).reduce((a, b) => a + Number(b), 0);
             
             // 股息總金額 (無條件捨去後加總)
-            // totalDividend 儲存的已經是 Math.floor(sharesHeld * dividendPerShare)
             const totalDividend = dividendRecords.reduce((sum, r) => sum + r.totalDividend, 0);
             
             let totalDays = 0;
@@ -437,7 +442,7 @@
             const months = [
                 [2025, 4], [2025, 5], [2025, 6], [2025, 7], [2025, 8], [2025, 9], [2025, 10], [2025, 11],
                 [2026, 0], [2026, 1], [2026, 2], [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], 
-                [2026, 8], [2026, 9], [2026, 10] // 2026/11 (月份是 0-11，所以 10 代表 11 月)
+                [2026, 8], [2026, 9], [2026, 10] 
             ];
 
             months.forEach(([year, month]) => {
@@ -539,7 +544,7 @@
         function renderDividendRecords() {
             dividendTableBody.innerHTML = '';
             dividendRecords.forEach((record, index) => {
-                const totalAmount = record.totalDividend; // totalDividend 已經是無條件捨去後的整數
+                const totalAmount = record.totalDividend; 
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -569,18 +574,51 @@
                 showMessage('股息紀錄已刪除！');
             }
         };
+        
+        /**
+         * 將留存的股票資訊快速填入表單。
+         * @param {string} stockID - 股名/股號。
+         * @param {number} dividendPerShare - 每股股利。
+         */
+        window.quickFillDividend = (stockID, dividendPerShare) => {
+            stockIdInput.value = stockID;
+            // 使用 toFixed(3) 確保小數點位數
+            dividendPerShareInput.value = dividendPerShare.toFixed(3); 
+            // 讓使用者知道已填入
+            showMessage(`已自動填入 ${stockID} 的股號與股利 (${dividendPerShare.toFixed(3)})！`);
+        };
+
 
         /**
-         * 渲染已儲存的股票資訊列表。
+         * 渲染已儲存的股票資訊列表 (依股名/股號排序)。
          */
         function renderStockInfoList() {
             stockInfoTableBody.innerHTML = '';
-            // 將 Map 轉換為陣列進行迭代
-            Array.from(stockInfo.entries()).forEach(([stockID, info]) => {
+            
+            // 1. 將 Map 轉換為陣列
+            let stockList = Array.from(stockInfo.entries()).map(([stockID, info]) => ({
+                stockID,
+                ...info
+            }));
+            
+            // 2. 依照 stockID (股號/股名) 從小到大排序
+            stockList.sort((a, b) => a.stockID.localeCompare(b.stockID));
+
+            // 3. 渲染列表
+            stockList.forEach((record) => {
                 const row = document.createElement('tr');
+                const stockID = record.stockID;
+                const dividend = record.dividendPerShare;
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${stockID}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${info.dividendPerShare.toFixed(3)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${dividend.toFixed(3)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                        <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200" 
+                                onclick="quickFillDividend('${stockID}', ${dividend})">
+                            快速填寫
+                        </button>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-red-600 hover:text-red-900" onclick="deleteStockInfo('${stockID}')">刪除</button>
                     </td>
@@ -608,11 +646,11 @@
         dividendForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const stockID = document.getElementById('stock-id').value.trim();
+            const stockID = stockIdInput.value.trim();
             const exDividendDate = document.getElementById('ex-dividend-date').value;
             const payoutDate = document.getElementById('payout-date').value;
             const sharesHeld = parseInt(document.getElementById('shares-held').value);
-            const dividendPerShare = parseFloat(document.getElementById('dividend-per-share').value);
+            const dividendPerShare = parseFloat(dividendPerShareInput.value);
 
             if (!stockID || !exDividendDate || !payoutDate || isNaN(sharesHeld) || sharesHeld <= 0 || isNaN(dividendPerShare) || dividendPerShare <= 0) {
                 showMessage('請檢查所有股息欄位是否都已正確填寫！');
@@ -638,6 +676,7 @@
             localStorage.setItem(dividendKey, JSON.stringify(dividendRecords));
 
             // 2. 儲存股票資訊 (股名/股號 & 每股股利)
+            // 將股利儲存為原始浮點數
             stockInfo.set(stockID, { dividendPerShare: dividendPerShare });
             localStorage.setItem(stockInfoKey, JSON.stringify(Array.from(stockInfo.entries())));
 

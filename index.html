@@ -119,7 +119,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">發放日期</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">持有股數</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">每股股利</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">總股息 (元)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">總股息 (無條件捨去)</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                         </tr>
                     </thead>
@@ -177,7 +177,7 @@
     </div>
 
     <script>
-        // *** 變數定義 (已更新) ***
+        // *** 變數定義 ***
         const startDate = new Date("2025-05-27");
         const endDate = new Date("2026-11-01"); 
         const savingPerDay = 30;
@@ -186,7 +186,6 @@
         const checkedKey = "saving_checked_days";
         const monthlyExtraKey = "saving_monthly_extra";
         const emergencyFundKey = "saving_emergency_fund";
-        // 新增股息相關的儲存鍵值
         const dividendKey = "saving_dividend_records";
         const stockInfoKey = "saving_stock_info"; // 儲存股名/股號與每股股利
 
@@ -194,7 +193,6 @@
         const checkedDays = new Set(JSON.parse(localStorage.getItem(checkedKey)) || []);
         const monthlyExtras = JSON.parse(localStorage.getItem(monthlyExtraKey)) || {};
         const emergencyFundRecords = JSON.parse(localStorage.getItem(emergencyFundKey)) || [];
-        // 取得新增的股息相關資料
         const dividendRecords = JSON.parse(localStorage.getItem(dividendKey)) || [];
         // 股票資訊使用 Map 結構，方便查找和更新
         const stockInfo = new Map(JSON.parse(localStorage.getItem(stockInfoKey)) || []);
@@ -219,7 +217,6 @@
         const totalWithdrawnSpan = document.getElementById('total-withdrawn');
         const totalRepaidSpan = document.getElementById('total-repaid');
         const outstandingAmountSpan = document.getElementById('outstanding-amount');
-        // 新增股息相關的 HTML 元素
         const dividendForm = document.getElementById('dividend-form');
         const dividendTableBody = document.getElementById('dividend-table-body');
         const stockInfoTableBody = document.getElementById('stock-info-table-body');
@@ -307,9 +304,13 @@
          * 更新頁面上的總結資訊。
          */
         function updateSummary() {
+            // 每日存款金額
             const totalDaily = checkedDays.size * savingPerDay;
+            // 額外收入
             const totalExtra = Object.values(monthlyExtras).reduce((a, b) => a + Number(b), 0);
-            // 計算股息總金額
+            
+            // 股息總金額 (無條件捨去後加總)
+            // totalDividend 儲存的已經是 Math.floor(sharesHeld * dividendPerShare)
             const totalDividend = dividendRecords.reduce((sum, r) => sum + r.totalDividend, 0);
             
             let totalDays = 0;
@@ -330,7 +331,9 @@
 
             // 總金額 = 每日存款 + 額外收入 + 總股息 - 未還急用金
             const totalSaved = totalDaily + totalExtra + totalDividend - outstandingAmount;
-            const percent = shouldSave > 0 ? ((totalSaved / shouldSave) * 100).toFixed(2) : 0;
+            
+            // 達成率只計算「每日存款」與「應存金額」的比例
+            const percent = shouldSave > 0 ? ((totalDaily / shouldSave) * 100).toFixed(2) : 0;
 
             summaryDiv.innerHTML = `
                 總金額：<span class="font-bold text-green-600">${totalSaved.toFixed(2)}</span> 元
@@ -536,16 +539,16 @@
         function renderDividendRecords() {
             dividendTableBody.innerHTML = '';
             dividendRecords.forEach((record, index) => {
-                const row = document.createElement('tr');
-                const totalAmount = (record.sharesHeld * record.dividendPerShare).toFixed(2);
+                const totalAmount = record.totalDividend; // totalDividend 已經是無條件捨去後的整數
                 
+                const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.stockID}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.exDividendDate}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.payoutDate}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.sharesHeld}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.dividendPerShare.toFixed(3)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalAmount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalAmount} 元</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-red-600 hover:text-red-900" onclick="deleteDividendRecord(${index})">刪除</button>
                     </td>
@@ -616,7 +619,9 @@
                 return;
             }
 
-            const totalDividend = sharesHeld * dividendPerShare;
+            // 實作無條件捨去：Math.floor(持有股數 * 每股股利)
+            const calculatedDividend = sharesHeld * dividendPerShare;
+            const totalDividend = Math.floor(calculatedDividend);
             
             const newRecord = {
                 id: Date.now(),
@@ -625,7 +630,7 @@
                 payoutDate: payoutDate,
                 sharesHeld: sharesHeld,
                 dividendPerShare: dividendPerShare,
-                totalDividend: totalDividend,
+                totalDividend: totalDividend, // 儲存無條件捨去後的整數
             };
             
             // 1. 儲存股息發放紀錄
@@ -639,7 +644,7 @@
             // 3. 更新頁面
             updateSummary();
             dividendForm.reset(); // 清空表單
-            showMessage(`股息紀錄已儲存！總金額：${totalDividend.toFixed(2)} 元`);
+            showMessage(`股息紀錄已儲存！總金額 (無條件捨去)：${totalDividend} 元`);
         });
 
         // 初始化：載入資料並渲染頁面

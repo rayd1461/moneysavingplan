@@ -16,26 +16,68 @@ jobs:
       - name: Fetch and process exchange rate
         shell: bash
         run: |
-          API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
+          # 嘗試主 API (Freecurrencyapi)
+          PRIMARY_API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
+          
+          # 嘗試備用 API (Yahoo 提供的公共數據)
+          SECONDARY_API_URL="https://query1.finance.yahoo.com/v7/finance/quotes?symbols=JPYTWD=X"
+          
+          echo "Attempting primary API..."
+          RESPONSE=$(curl -s --max-time 10 "$PRIMARY_API_URL")
+          CURL_STATUS=$?
+          
+          # 檢查 curl 是否成功，並檢查回應中是否有 JPY 數據
+          if [ $CURL_STATUS -eq 0 ] && echo "$RESPONSE" | grep -q '"JPY"'; then
+            echo "Primary API successful. Parsing data..."
+            # 使用 grep/cut 解析 FreecurrencyAPI
+            JPY_RATE=$(echo "$RESPONSE" | grep -o '"JPY":[0-9.]*' | cut -d: -f2)
+            SOURCE="FreecurrencyAPI"
+            
+          # 如果主要 API 失敗或無數據，嘗試備用 API
+          else
+            echo "Primary API failed or data missing. Attempting secondary API..."
+            RESPONSE=$(curl -s --max-time 10 "$SECONDARY_API_URL")
+            CURL_STATUS=$?
 
-          echo "Fetching rate from API..."
-          RESPONSE=$(curl -s "$API_URL")
-
-          if [ $? -ne 0 ]; then
-            echo "::error::Curl failed."
-            exit 1
+            if [ $CURL_STATUS -eq 0 ] && echo "$RESPONSE" | grep -q 'regularMarketPrice'; then
+                echo "Secondary API successful. Parsing data..."
+                # 備註: Yahoo 數據為 JPY/TWD (日幣兌台幣)，我們需要取其倒數 (1 / JPY/TWD)
+                JPYTWD_RATE=$(echo "$RESPONSE" | grep -o '"regularMarketPrice":[0-9.]*' | cut -d: -f2)
+                
+                if [ -n "$JPYTWD_RATE" ] && [ "$(echo "$JPYTWD_RATE > 0" | bc -l)" -eq 1 ]; then
+                    # 計算 TWD/JPY = 1 / JPY/TWD
+                    JPY_RATE=$(echo "1 / $JPYTWD_RATE" | bc -l)
+                    SOURCE="Yahoo Finance (Inverse)"
+                else
+                    echo "::error::Secondary API failed to provide valid JPY/TWD rate."
+                    exit 1
+                fi
+            else
+                echo "::error::Both APIs failed to provide data. Curl Status: $CURL_STATUS"
+                exit 1
+            fi
           fi
 
-          JPY_RATE=$(echo "$RESPONSE" | grep -o '"JPY":[0-9.]*' | cut -d: -f2)
-
+          # 檢查最終匯率是否有效
           if [ -z "$JPY_RATE" ]; then
             echo "::error::Failed to extract JPY rate."
-            echo "Response: $RESPONSE"
             exit 1
           fi
 
+          # 格式化輸出到小數點後 5 位
+          FORMATTED_RATE=$(echo "scale=5; $JPY_RATE / 1" | bc)
+          
+          echo "Source: $SOURCE"
+          echo "TWD/JPY Rate: $FORMATTED_RATE"
+
           echo "Writing latest_rate.json..."
-          echo "{\"last_updated\":\"$(date -u +'%Y-%m-%d %H:%M:%S UTC')\",\"twd_to_jpy\":$JPY_RATE}" > latest_rate.json
+          cat <<EOF > latest_rate.json
+{
+  "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
+  "twd_to_jpy": "$FORMATTED_RATE",
+  "source": "$SOURCE"
+}
+EOF
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5

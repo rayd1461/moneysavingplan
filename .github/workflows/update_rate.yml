@@ -66,22 +66,8 @@ jobs:
 
                   # 格式化輸出到小數點後 5 位 (需要 bc)
                   FORMATTED_RATE=$(echo "scale=5; $JPY_RATE / 1" | bc)
-                  
-                  echo "Source: $SOURCE"
-                  echo "TWD/JPY Rate: $FORMATTED_RATE"
-
-                  echo "Writing latest_rate.json..."
-                  cat <<EOF > latest_rate.json
-{
-  "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
-  "twd_to_jpy": "$FORMATTED_RATE",
-  "source": "$SOURCE"
-}
-EOF
-
-            - name: Commit and Push changes
-              uses: stefanzweifel/git-auto-commit-action@v5
-              with:
-                  file_pattern: latest_rate.json
-                  # 第 75 行在這裡：
-                  commit_message: "自動更新匯率：TWD/JPY"
+       - name: Commit and Push changes
+          uses: stefanzweifel/git-auto-commit-action@v5
+          with:
+              file_pattern: latest_rate.json
+              commit_message: "自動更新匯率：TWD/JPY"

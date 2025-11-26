@@ -12,30 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        # 這是 GitHub Actions 的標準步驟，用於取得專案檔案
         uses: actions/checkout@v4
 
       - name: Fetch and process exchange rate
-        # 確保此 'run:' 下方的所有行都保持相同的縮排 (通常是兩個空格)
         run: |
           # 使用一個穩定且公開的匯率 API，此處選擇 Freecurrencyapi
           API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
           
           echo "Fetching rate from API..."
           
-          # 使用 curl 抓取數據
           RATE_DATA=$(curl -s "$API_URL")
 
-          # 檢查 curl 是否成功
           if [ $? -ne 0 ]; then
             echo "::error::Curl failed to fetch data."
             exit 1
           fi
 
-          # 使用 jq (JSON 處理工具) 提取 JPY 匯率值
           JPY_RATE=$(echo "$RATE_DATA" | jq -r '.data.JPY')
           
-          # 檢查是否成功提取匯率
           if [ -z "$JPY_RATE" ] || [ "$JPY_RATE" == "null" ]; then
             echo "::error::Failed to extract JPY rate. API response might be invalid."
             echo "Response: $RATE_DATA"
@@ -44,7 +38,6 @@ jobs:
 
           echo "TWD/JPY Rate: $JPY_RATE"
           
-          # 創建新的 JSON 文件 (使用 EOF 標記多行字串)
           cat <<EOF > latest_rate.json
 {
   "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
@@ -54,11 +47,8 @@ EOF
           echo "Created latest_rate.json"
 
       - name: Commit and Push changes
-        # 這是 GitHub Actions 的標準步驟，用於自動提交變更
+        # 使用最簡潔的單行配置，避免多行縮排問題
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           file_pattern: latest_rate.json
           commit_message: "自動更新匯率：TWD/JPY"
-          commit_user_name: 'GitHub Actions'
-          commit_user_email: 'actions@github.com'
-          commit_author: 'GitHub Actions <actions@github.com>'

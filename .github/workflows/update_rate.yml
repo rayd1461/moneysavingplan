@@ -25,20 +25,20 @@ jobs:
           echo "Attempting primary API..."
           RESPONSE=$(curl -s --max-time 10 "$PRIMARY_API_URL")
           if echo "$RESPONSE" | grep -q '"JPY"'; then
-              JPY_RATE=$(echo "$RESPONSE" | grep -o '"JPY":[0-9.]*' | cut -d: -f2)
-              SOURCE="FreecurrencyAPI"
+            JPY_RATE=$(echo "$RESPONSE" | grep -o '"JPY":[0-9.]*' | cut -d: -f2)
+            SOURCE="FreecurrencyAPI"
           fi
 
           if [ -z "$JPY_RATE" ]; then
-              echo "Primary API failed. Attempting secondary API..."
-              RESPONSE=$(curl -s --max-time 10 "$SECONDARY_API_URL")
-              if echo "$RESPONSE" | grep -q 'regularMarketPrice'; then
-                  JPYTWD_RATE=$(echo "$RESPONSE" | grep -o '"regularMarketPrice":[0-9.]*' | cut -d: -f2)
-                  if [ -n "$JPYTWD_RATE" ]; then
-                      JPY_RATE=$(echo "1 / $JPYTWD_RATE" | bc -l)
-                      SOURCE="Yahoo Finance (Inverse)"
-                  fi
+            echo "Primary API failed. Attempting secondary API..."
+            RESPONSE=$(curl -s --max-time 10 "$SECONDARY_API_URL")
+            if echo "$RESPONSE" | grep -q 'regularMarketPrice'; then
+              JPYTWD_RATE=$(echo "$RESPONSE" | grep -o '"regularMarketPrice":[0-9.]*' | cut -d: -f2)
+              if [ -n "$JPYTWD_RATE" ]; then
+                JPY_RATE=$(echo "1 / $JPYTWD_RATE" | bc -l)
+                SOURCE="Yahoo Finance (Inverse)"
               fi
+            fi
           fi
 
           if [ -z "$JPY_RATE" ]; then
@@ -67,4 +67,3 @@ EOF
             git push
           else
             echo "匯率沒有變動，無需提交。"
-          fi

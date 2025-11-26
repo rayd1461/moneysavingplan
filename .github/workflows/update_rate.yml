@@ -1,7 +1,7 @@
 name: Update Exchange Rate
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
 
@@ -49,7 +49,7 @@ jobs:
           FORMATTED_RATE=$(echo "scale=5; $JPY_RATE / 1" | bc)
           echo "TWD/JPY Rate: $FORMATTED_RATE"
 
-cat <<EOF > latest_rate.json
+          cat <<EOF > latest_rate.json
 {
   "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
   "twd_to_jpy": "$FORMATTED_RATE",

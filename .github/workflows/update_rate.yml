@@ -14,35 +14,28 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch and process exchange rate
+        shell: bash
         run: |
           API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
 
           echo "Fetching rate from API..."
-          RATE_DATA=$(curl -s "$API_URL")
+          RESPONSE=$(curl -s "$API_URL")
 
           if [ $? -ne 0 ]; then
             echo "::error::Curl failed."
             exit 1
           fi
 
-          JPY_RATE=$(echo "$RATE_DATA" | jq -r '.data.JPY')
+          JPY_RATE=$(echo "$RESPONSE" | grep -o '"JPY":[0-9.]*' | cut -d: -f2)
 
-          if [ -z "$JPY_RATE" ] || [ "$JPY_RATE" = "null" ]; then
+          if [ -z "$JPY_RATE" ]; then
             echo "::error::Failed to extract JPY rate."
-            echo "Response: $RATE_DATA"
+            echo "Response: $RESPONSE"
             exit 1
           fi
 
-          echo "TWD/JPY Rate: $JPY_RATE"
-
-          cat <<EOF > latest_rate.json
-{
-  "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
-  "twd_to_jpy": $JPY_RATE
-}
-EOF
-
-          echo "Created latest_rate.json"
+          echo "Writing latest_rate.json..."
+          echo "{\"last_updated\":\"$(date -u +'%Y-%m-%d %H:%M:%S UTC')\",\"twd_to_jpy\":$JPY_RATE}" > latest_rate.json
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5

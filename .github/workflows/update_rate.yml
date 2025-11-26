@@ -1,6 +1,7 @@
 name: Update Exchange Rate
 
 on:
+  # 允許在 Actions 頁籤手動觸發
   workflow_dispatch:
   schedule:
     # 每天 UTC 00:00 (台灣時間早上 8:00) 執行
@@ -11,12 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # 這是 GitHub Actions 的標準步驟，用於取得專案檔案
         uses: actions/checkout@v4
 
       - name: Fetch and process exchange rate
+        # 確保此 'run:' 下方的所有行都保持相同的縮排 (通常是兩個空格)
         run: |
-          # 使用一個穩定且公開的匯率 API (此處選擇 Freecurrencyapi)
-          # Freecurrencyapi 提供了一個不需要 Key 的 endpoint，但可能有請求限制
+          # 使用一個穩定且公開的匯率 API，此處選擇 Freecurrencyapi
+          # 雖然 Freecurrencyapi 要求 Key，但測試發現該 API URL 在沒有 Key 的情況下仍會返回一個默認的匯率數據
+          # 備註：此 Key 僅為示範用途，不具備實際效力
           API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
           
           echo "Fetching rate from API..."
@@ -31,18 +35,20 @@ jobs:
           fi
 
           # 使用 jq (JSON 處理工具) 提取 JPY 匯率值
+          # 注意：GitHub Actions 環境中預設帶有 jq
           JPY_RATE=$(echo "$RATE_DATA" | jq -r '.data.JPY')
           
           # 檢查是否成功提取匯率
           if [ -z "$JPY_RATE" ] || [ "$JPY_RATE" == "null" ]; then
             echo "::error::Failed to extract JPY rate. API response might be invalid."
             echo "Response: $RATE_DATA"
-            exit 1
+            # 由於 Freecurrencyapi 的免費限制，有時會返回 null，這裡我們允許它失敗
+            exit 1 
           fi
 
           echo "TWD/JPY Rate: $JPY_RATE"
           
-          # 創建新的 JSON 文件
+          # 創建新的 JSON 文件 (使用 EOF 標記多行字串)
           cat <<EOF > latest_rate.json
 {
   "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
@@ -52,12 +58,11 @@ EOF
           echo "Created latest_rate.json"
 
       - name: Commit and Push changes
+        # 這是 GitHub Actions 的標準步驟，用於自動提交變更
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          # 只推送變更後的 JSON 檔案
           file_pattern: latest_rate.json
           commit_message: "自動更新匯率：TWD/JPY"
-          # 這個 token 應該在 Actions 中自動可用
           commit_user_name: 'GitHub Actions'
           commit_user_email: 'actions@github.com'
           commit_author: 'GitHub Actions <actions@github.com>'

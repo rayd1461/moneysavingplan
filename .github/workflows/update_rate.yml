@@ -56,7 +56,6 @@ EOF
       - name: Commit and Push changes
         # 這是 GitHub Actions 的標準步驟，用於自動提交變更
         uses: stefanzweifel/git-auto-commit-action@v5
-        # 第 53 行在這裡：with:
         with:
           file_pattern: latest_rate.json
           commit_message: "自動更新匯率：TWD/JPY"

@@ -11,21 +11,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        # 確保 token 權限
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch, Process, Commit and Push
         shell: bash
-        # 將所有邏輯放在一個 run: 區塊中，減少 YAML 層級
         run: |
-          # 1. API 設置
           PRIMARY_API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
           SECONDARY_API_URL="https://query1.finance.yahoo.com/v7/finance/quotes?symbols=JPYTWD=X"
-          JPY_RATE="" # 初始化匯率變數
+          JPY_RATE=""
 
-          # 2. 嘗試主要 API
           echo "Attempting primary API..."
           RESPONSE=$(curl -s --max-time 10 "$PRIMARY_API_URL")
           if echo "$RESPONSE" | grep -q '"JPY"'; then
@@ -33,20 +29,18 @@ jobs:
               SOURCE="FreecurrencyAPI"
           fi
 
-          # 3. 嘗試備用 API
           if [ -z "$JPY_RATE" ]; then
               echo "Primary API failed. Attempting secondary API..."
               RESPONSE=$(curl -s --max-time 10 "$SECONDARY_API_URL")
               if echo "$RESPONSE" | grep -q 'regularMarketPrice'; then
                   JPYTWD_RATE=$(echo "$RESPONSE" | grep -o '"regularMarketPrice":[0-9.]*' | cut -d: -f2)
-                  if [ -n "$JPYTWD_RATE" ] && [ "$(echo "$JPYTWD_RATE > 0" | bc -l)" -eq 1 ]; then
+                  if [ -n "$JPYTWD_RATE" ]; then
                       JPY_RATE=$(echo "1 / $JPYTWD_RATE" | bc -l)
                       SOURCE="Yahoo Finance (Inverse)"
                   fi
               fi
           fi
 
-          # 4. 檢查與退出
           if [ -z "$JPY_RATE" ]; then
             echo "::error::無法取得任何有效的匯率。"
             exit 1
@@ -55,7 +49,6 @@ jobs:
           FORMATTED_RATE=$(echo "scale=5; $JPY_RATE / 1" | bc)
           echo "TWD/JPY Rate: $FORMATTED_RATE"
 
-          # 5. 創建 JSON 檔案
           cat <<EOF > latest_rate.json
 {
   "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
@@ -64,14 +57,14 @@ jobs:
 }
 EOF
 
-          # 6. Git 提交 (如果檔案有變動)
-          if git diff --exit-code latest_rate.json; then
-            echo "匯率沒有變動，無需提交。"
-          else
+          echo "Checking for changes..."
+          if ! git diff --quiet latest_rate.json; then
             echo "檔案已更新，開始提交。"
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             git add latest_rate.json
             git commit -m "自動更新匯率：TWD/JPY"
             git push
+          else
+            echo "匯率沒有變動，無需提交。"
           fi

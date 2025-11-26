@@ -18,21 +18,17 @@ jobs:
 
     # 確保 'steps:' 有四個空格縮排
     steps:
-      # 確保 'name:' 有六個空格縮排
       - name: Checkout repository
-        # 確保 'uses:' 與 'name:' 對齊
         uses: actions/checkout@v4
+        # 需要設定 token 權限才能提交
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      # 確保 '- name:' 有六個空格縮排
-      - name: Fetch and process exchange rate
-        # 確保 'shell:' 與 'uses:' 對齊
+      - name: Fetch, Process, and Create JSON
         shell: bash
-        # 確保 'run:' 與 'shell:' 對齊
         run: |
           # 嘗試主 API (Freecurrencyapi)
           PRIMARY_API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
-          
-          # 嘗試備用 API (Yahoo 提供的公共數據)
           SECONDARY_API_URL="https://query1.finance.yahoo.com/v7/finance/quotes?symbols=JPYTWD=X"
           
           echo "Attempting primary API..."
@@ -85,12 +81,22 @@ jobs:
 }
 EOF
 
-      # 確保 '- name:' 有六個空格縮排
       - name: Commit and Push changes
-        # 確保 'uses:' 與 'name:' 對齊
-        uses: stefanzweifel/git-auto-commit-action@v5
-        # 確保 'with:' 與 'uses:' 對齊
-        with:
-          # 確保 'file_pattern:' 有八個空格縮排
-          file_pattern: latest_rate.json
-          commit_message: "自動更新匯率：TWD/JPY"
+        shell: bash
+        run: |
+          # 檢查檔案是否真的有變動
+          if git diff --exit-code latest_rate.json; then
+            echo "匯率沒有變動，無需提交。"
+            exit 0
+          fi
+          
+          # 設定 Git 使用者資訊
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # 將檔案加入提交
+          git add latest_rate.json
+          
+          # 提交並推送
+          git commit -m "自動更新匯率：TWD/JPY"
+          git push

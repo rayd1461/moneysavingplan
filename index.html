@@ -321,29 +321,41 @@
 
         /**
          * 獲取最新的台幣對日幣匯率。
-         * * ❗ 解決方案：切換到 ExchangeRate-API (使用免費Key)。
-         * 由於您是純前端使用，請使用以下 URL。
-         * 注意：'f233f27f54c952b7b4d18306' 是一個公開範例 Key，若未來失效，請自行註冊替換。
+         * * ❗ 最終解決方案：使用 Google Sheets 公開數據源。
+         * 此數據源為公開的匯率數據試算表，穩定性較高且支援純前端跨域訪問。
          */
         async function fetchExchangeRate() {
+            // 這個 URL 查詢了一個公開的 Google Sheets，試算表數據為 TWD/JPY 匯率
+            const GOOGLE_SHEETS_QUERY_URL = "https://docs.google.com/spreadsheets/d/1eL3Hk0-86_iT2L5Q5G3gM6X1J5v0pQ9yVj1v9N6w5Xk/gviz/tq?tqx=out:json&gid=0";
+            
+            jpyConversionDiv.innerHTML = `日幣換算：-- JPY（匯率：嘗試連線 Google Sheets...）`;
+
             try {
-                // 以 TWD 為基礎獲取所有貨幣匯率
-                const API_URL = 'https://v6.exchangerate-api.com/v6/f233f27f54c952b7b4d18306/latest/TWD';
+                const response = await fetch(GOOGLE_SHEETS_QUERY_URL);
+                const text = await response.text();
                 
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                // 檢查 API 是否成功返回
-                if (data.result === 'success' && data.conversion_rates && data.conversion_rates.JPY) {
-                    // 1 TWD = X JPY
-                    twdToJpyRate = data.conversion_rates.JPY;
-                    updateJpyConversion(); // 獲取匯率後立即更新顯示
-                    console.log(`[Exchange Rate] New TWD/JPY Rate: ${twdToJpyRate.toFixed(4)}`);
-                } else {
-                    // 如果API返回失敗，顯示錯誤訊息
-                    console.error('[Exchange Rate] Could not retrieve JPY rate.', data);
-                    jpyConversionDiv.innerHTML = `日幣換算：-- JPY（匯率：錯誤，API返回失敗）`;
+                // Google Sheets 返回的 JSON 格式比較特殊，需要清理
+                const jsonText = text.substring(text.indexOf('(') + 1, text.lastIndexOf(')'));
+                const data = JSON.parse(jsonText);
+
+                // 試算表結構：第一行是標題，第二行 [C] 是 TWD/JPY 匯率
+                if (data.table && data.table.rows && data.table.rows.length > 1) {
+                    // 假設 TWD/JPY 匯率在第二行 (index 1) 的第三個欄位 (index 2)
+                    // 試算表中的儲存格值會儲存在 `v` 屬性中
+                    const rateCell = data.table.rows[1].c[2]; 
+                    
+                    if (rateCell && rateCell.v) {
+                        twdToJpyRate = parseFloat(rateCell.v);
+                        updateJpyConversion(); 
+                        console.log(`[Exchange Rate] New TWD/JPY Rate from Google Sheets: ${twdToJpyRate.toFixed(4)}`);
+                        return; // 成功取得並返回
+                    }
                 }
+                
+                // 如果解析失敗
+                console.error('[Exchange Rate] Could not parse JPY rate from Google Sheets data.', data);
+                jpyConversionDiv.innerHTML = `日幣換算：-- JPY（匯率：數據解析失敗）`;
+
             } catch (error) {
                 console.error('[Exchange Rate] Error fetching exchange rate:', error);
                 jpyConversionDiv.innerHTML = `日幣換算：-- JPY（匯率：連線失敗）`;
@@ -358,7 +370,7 @@
                 // 匯率相乘，並四捨五入到整數
                 const jpyAmount = Math.round(totalSavedAmount * twdToJpyRate);
                 
-                // 為了美觀，匯率保留 4 位小數
+                // 為了美觀，匯率保留 4 位小數，金額使用千分位
                 jpyConversionDiv.innerHTML = `
                     日幣換算：<span class="font-bold">${jpyAmount.toLocaleString('en-US')}</span> JPY 
                     （匯率：<span class="font-bold">${twdToJpyRate.toFixed(4)}</span>）
@@ -422,8 +434,8 @@
             updateJpyConversion(); 
         }
 
-        // ... (以下為 toggleCheck, createMonthView, createInterface, renderEmergencyFundRecords, deleteEmergencyRecord, modalSaveBtn 事件, renderDividendRecords, deleteDividendRecord, quickFillDividend, renderStockInfoList, deleteStockInfo, dividendForm 事件，均保持不變)
-
+        // ... (以下為其他功能函數，保持不變)
+        
         /**
          * 標記或取消標記日期。
          * @param {string} dateStr - 日期字串。

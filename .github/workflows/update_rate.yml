@@ -46,16 +46,14 @@ jobs:
             exit 1
           fi
 
-          FORMATTED_RATE=$(echo "scale=5; $JPY_RATE / 1" | bc)
+          FORMATTED_RATE=$(echo "scale=5; $JPY_RATE" | bc)
           echo "TWD/JPY Rate: $FORMATTED_RATE"
 
-          cat <<EOF > latest_rate.json
-{
-  "last_updated": "$(date -u +'%Y-%m-%d %H:%M:%S UTC')",
-  "twd_to_jpy": "$FORMATTED_RATE",
-  "source": "$SOURCE"
-}
-EOF
+          echo "{" > latest_rate.json
+          echo "  \"last_updated\": \"$(date -u +'%Y-%m-%d %H:%M:%S UTC')\"," >> latest_rate.json
+          echo "  \"twd_to_jpy\": \"$FORMATTED_RATE\"," >> latest_rate.json
+          echo "  \"source\": \"$SOURCE\"" >> latest_rate.json
+          echo "}" >> latest_rate.json
 
           echo "Checking for changes..."
           if ! git diff --quiet latest_rate.json; then

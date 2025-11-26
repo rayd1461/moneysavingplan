@@ -3,7 +3,6 @@ name: Update Exchange Rate
 on:
   workflow_dispatch:
   schedule:
-    # 每天 UTC 00:00 (台灣時間早上 8:00) 執行
     - cron: "0 0 * * *"
 
 jobs:
@@ -22,14 +21,14 @@ jobs:
           RATE_DATA=$(curl -s "$API_URL")
 
           if [ $? -ne 0 ]; then
-            echo "::error::Curl failed to fetch data."
+            echo "::error::Curl failed."
             exit 1
           fi
 
           JPY_RATE=$(echo "$RATE_DATA" | jq -r '.data.JPY')
 
-          if [ -z "$JPY_RATE" ] || [ "$JPY_RATE" == "null" ]; then
-            echo "::error::Failed to extract JPY rate. API response might be invalid."
+          if [ -z "$JPY_RATE" ] || [ "$JPY_RATE" = "null" ]; then
+            echo "::error::Failed to extract JPY rate."
             echo "Response: $RATE_DATA"
             exit 1
           fi
@@ -42,6 +41,7 @@ jobs:
   "twd_to_jpy": $JPY_RATE
 }
 EOF
+
           echo "Created latest_rate.json"
 
       - name: Commit and Push changes

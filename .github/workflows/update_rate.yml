@@ -1,33 +1,24 @@
 name: Update Exchange Rate
 
-# 確保 'on:' 與 'name:' 對齊
 on:
-  # 允許在 Actions 頁籤手動觸發 (沒有縮排)
   workflow_dispatch: 
-  # 確保 'schedule:' 與 'workflow_dispatch:' 對齊 (沒有縮排)
   schedule:
-    # 確保 '- cron:' 只有兩個空格縮排
     - cron: "0 0 * * *"
 
-# 確保 'jobs:' 與 'name:' 對齊
 jobs:
-  # 確保 'update-rate:' 有兩個空格縮排
   update-rate:
-    # 確保 'runs-on:' 有四個空格縮排
     runs-on: ubuntu-latest
 
-    # 確保 'steps:' 有四個空格縮排
     steps:
       - name: Checkout repository
+        # 確保 token 權限
         uses: actions/checkout@v4
-        # 需要設定 token 權限才能提交
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch, Process, and Create JSON
         shell: bash
         run: |
-          # 嘗試主 API (Freecurrencyapi)
           PRIMARY_API_URL="https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_example&base_currency=TWD&currencies=JPY"
           SECONDARY_API_URL="https://query1.finance.yahoo.com/v7/finance/quotes?symbols=JPYTWD=X"
           
@@ -81,22 +72,9 @@ jobs:
 }
 EOF
 
+      # 這是最後一個步驟，也是錯誤一直發生的點
       - name: Commit and Push changes
         shell: bash
+        # 使用單行命令，避免所有縮排問題
         run: |
-          # 檢查檔案是否真的有變動
-          if git diff --exit-code latest_rate.json; then
-            echo "匯率沒有變動，無需提交。"
-            exit 0
-          fi
-          
-          # 設定 Git 使用者資訊
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          
-          # 將檔案加入提交
-          git add latest_rate.json
-          
-          # 提交並推送
-          git commit -m "自動更新匯率：TWD/JPY"
-          git push
+          if git diff --exit-code latest_rate.json; then echo "No change."; else git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add latest_rate.json && git commit -m "Auto Update Rate: TWD/JPY" && git push; fi

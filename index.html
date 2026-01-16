@@ -22,10 +22,7 @@
             <div id="summary" class="text-xl sm:text-2xl font-semibold text-green-600 mb-1">
                 總金額：0 元（應存金額：0 元，達成率：0%）
             </div>
-            <div id="jpy-conversion" class="text-lg font-medium text-gray-600">
-                目前儲蓄價值：-- JPY（匯率載入中...）
-            </div>
-        </header>
+            </header>
 
         <div id="month-buttons" class="flex flex-wrap justify-center gap-2"></div>
         <div id="all-months"></div>
@@ -76,10 +73,10 @@
             
             <div class="mb-4 flex flex-wrap gap-2">
                 <span class="text-sm self-center text-gray-500">快速填入：</span>
-                <button onclick="quickFillStock('0050', 1.0)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300">0050</button>
-                <button onclick="quickFillStock('0056', 0.79)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300">0056</button>
-                <button onclick="quickFillStock('00878', 0.55)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300">00878</button>
-                <button onclick="quickFillStock('00919', 0.72)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300">00919</button>
+                <button onclick="quickFillStock('0050', 1.0)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">0050</button>
+                <button onclick="quickFillStock('0056', 0.79)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">0056</button>
+                <button onclick="quickFillStock('00878', 0.55)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">00878</button>
+                <button onclick="quickFillStock('00919', 0.72)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">00919</button>
             </div>
 
             <form id="dividend-form" class="bg-gray-50 p-4 rounded-lg space-y-3 mb-6">
@@ -89,21 +86,19 @@
                     <input type="date" id="payout-date" required class="p-2 border rounded">
                     <input type="number" id="shares-held" placeholder="持有股數" required class="p-2 border rounded">
                     <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股利" required class="p-2 border rounded">
-                    <button type="submit" class="bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">紀錄股息</button>
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 transition">紀錄股息</button>
                 </div>
             </form>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm text-left"><tbody id="dividend-table-body"></tbody></table>
-            </div>
-            <h3 class="font-bold mt-4">已留存股票資訊 (依股號排序)</h3>
+            <div class="overflow-x-auto"><table class="min-w-full text-sm text-left"><tbody id="dividend-table-body"></tbody></table></div>
+            <h3 class="font-bold mt-4">已留存股票資訊</h3>
             <div class="overflow-x-auto"><table class="min-w-full text-sm mt-2"><tbody id="stock-info-table-body"></tbody></table></div>
         </section>
 
         <section id="emergency-section" class="pt-6 border-t border-gray-200">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">臨時急用金</h2>
             <div class="flex gap-4 mb-4">
-                <button onclick="showInputModal('提領', 'withdraw')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">提領</button>
-                <button onclick="showInputModal('歸還', 'repay')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">歸還</button>
+                <button onclick="showInputModal('提領', 'withdraw')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">提領</button>
+                <button onclick="showInputModal('歸還', 'repay')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">歸還</button>
             </div>
             <div id="emergency-summary" class="text-sm text-gray-600">未還金額：<span id="outstanding-amount" class="text-red-600 font-bold">0</span> 元</div>
             <div class="overflow-x-auto">
@@ -153,17 +148,14 @@
             exchange: JSON.parse(localStorage.getItem(keys.exchange)) || []
         };
 
-        let twdToJpyRate = null;
-
         function init() {
             renderMonths();
-            fetchRate();
             updateSummary();
             renderExchangeTable();
             renderEmergencyTable();
         }
 
-        // === 換匯邏輯修正：TWD / 匯率 = JPY ===
+        // === 換匯計算邏輯 (TWD / 銀行賣出價 = JPY) ===
         function addExchangeRecord() {
             const date = document.getElementById('ex-date').value;
             const twd = parseFloat(document.getElementById('ex-twd').value);
@@ -208,29 +200,15 @@
             document.getElementById('total-jpy-sum').innerText = totalJpy.toLocaleString();
         }
 
-        async function fetchRate() {
-            try {
-                // 假設 API 回傳格式為 { "twd_to_jpy": 0.2011 } 代表 1 JPY = 0.2011 TWD
-                const response = await fetch('latest_rate.json');
-                const rateData = await response.json();
-                twdToJpyRate = parseFloat(rateData.twd_to_jpy);
-                updateSummary();
-            } catch (e) {
-                document.getElementById('jpy-conversion').innerText = "匯率載入中或 API 未就緒...";
-            }
-        }
-
         function updateSummary() {
             const dailySaved = data.checked.size * savingPerDay;
             const extraSaved = Object.values(data.extra).reduce((a, b) => a + Number(b), 0);
             const divSaved = data.dividend.reduce((sum, r) => sum + r.totalDividend, 0);
-            
             const totalWithdrawn = data.emergency.filter(r => r.type === 'withdraw').reduce((sum, r) => sum + r.amount, 0);
             const totalRepaid = data.emergency.filter(r => r.type === 'repay').reduce((sum, r) => sum + r.amount, 0);
             const debt = totalWithdrawn - totalRepaid;
 
             const totalSavedTwd = dailySaved + extraSaved + divSaved - debt;
-
             const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const targetTwd = totalDays * savingPerDay;
             const progress = ((dailySaved / targetTwd) * 100).toFixed(2);
@@ -239,15 +217,6 @@
                 總金額：<span class="text-green-600">${totalSavedTwd.toLocaleString()}</span> 元 
                 <span class="text-sm text-gray-500">(應存進度：${progress}%)</span>
             `;
-
-            if (twdToJpyRate) {
-                // 計算邏輯：台幣總額 / 銀行匯率 = 可換日幣
-                const jpyVal = Math.floor(totalSavedTwd / twdToJpyRate);
-                document.getElementById('jpy-conversion').innerHTML = `
-                    目前儲蓄價值：<span class="font-bold text-blue-600">${jpyVal.toLocaleString()}</span> JPY 
-                    <span class="text-xs text-gray-400">(參考匯率: ${twdToJpyRate.toFixed(4)})</span>
-                `;
-            }
             
             document.getElementById('outstanding-amount').innerText = debt.toLocaleString();
             renderStockList();
@@ -257,7 +226,6 @@
         window.quickFillStock = (id, rate) => {
             document.getElementById('stock-id').value = id;
             document.getElementById('dividend-per-share').value = rate;
-            // 自動帶入今天日期作為範例
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('ex-dividend-date').value = today;
             document.getElementById('payout-date').value = today;
@@ -265,7 +233,7 @@
 
         // === 急用金刪除功能 ===
         function deleteEmergencyRecord(index) {
-            if(confirm("確定要刪除這筆急用金紀錄嗎？")) {
+            if(confirm("確定要刪除這筆紀錄嗎？")) {
                 data.emergency.splice(index, 1);
                 localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
                 renderEmergencyTable();
@@ -280,14 +248,11 @@
                     <td class="p-2 border text-center">${r.date}</td>
                     <td class="p-2 border text-center ${r.type === 'withdraw' ? 'text-red-500' : 'text-blue-500'}">${r.type === 'withdraw' ? '提領' : '歸還'}</td>
                     <td class="p-2 border text-right">${r.amount.toLocaleString()}</td>
-                    <td class="p-2 border text-center">
-                        <button onclick="deleteEmergencyRecord(${index})" class="text-red-400 hover:text-red-600">刪除</button>
-                    </td>
+                    <td class="p-2 border text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-400 hover:text-red-600">刪除</button></td>
                 </tr>
             `).join('');
         }
 
-        // 剩餘原有的功能函式...
         function renderMonths() {
             const container = document.getElementById('month-buttons');
             let curr = new Date(startDate.getFullYear(), startDate.getMonth(), 1);

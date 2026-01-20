@@ -20,9 +20,12 @@
         <header class="text-center">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">存錢與分批換匯計畫</h1>
             <div id="summary" class="text-xl sm:text-2xl font-semibold text-green-600 mb-1">
-                總金額：0 元（應存金額：0 元，達成率：0%）
+                總金額 (剩餘台幣)：0 元
             </div>
-            </header>
+            <div id="progress-text" class="text-sm text-gray-500">
+                應存進度：0%
+            </div>
+        </header>
 
         <div id="month-buttons" class="flex flex-wrap justify-center gap-2"></div>
         <div id="all-months"></div>
@@ -41,8 +44,8 @@
                     <input type="number" id="ex-twd" placeholder="金額" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">銀行賣出價 (如 0.2011)</label>
-                    <input type="number" id="ex-rate" step="0.0001" placeholder="0.2011" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <label class="block text-sm font-medium text-gray-700">銀行賣出價</label>
+                    <input type="number" id="ex-rate" step="0.0001" placeholder="如 0.2011" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
                 </div>
                 <button onclick="addExchangeRecord()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition">新增換匯</button>
             </div>
@@ -52,7 +55,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">日期</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">台幣</th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">支出的台幣</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">匯率</th>
                             <th class="px-4 py-3 text-left font-medium text-blue-600">獲得日幣</th>
                             <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase">操作</th>
@@ -61,8 +64,9 @@
                     <tbody id="exchange-body" class="bg-white divide-y divide-gray-200"></tbody>
                 </table>
             </div>
-            <div class="mt-4 text-xl font-bold text-blue-800">
-                已換得日幣總計：<span id="total-jpy-sum">0</span> JPY
+            <div class="mt-4 flex justify-between items-center">
+                <div class="text-lg font-bold text-blue-800">已換得日幣總計：<span id="total-jpy-sum">0</span> JPY</div>
+                <div class="text-sm text-gray-500">換匯累計支出：<span id="total-exchanged-twd">0</span> TWD</div>
             </div>
         </section>
 
@@ -89,9 +93,21 @@
                     <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 transition">紀錄股息</button>
                 </div>
             </form>
-            <div class="overflow-x-auto"><table class="min-w-full text-sm text-left"><tbody id="dividend-table-body"></tbody></table></div>
-            <h3 class="font-bold mt-4">已留存股票資訊</h3>
-            <div class="overflow-x-auto"><table class="min-w-full text-sm mt-2"><tbody id="stock-info-table-body"></tbody></table></div>
+
+            <h3 class="font-bold mb-2">股息歷史紀錄</h3>
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full text-sm text-left border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-2 border">發放日</th>
+                            <th class="p-2 border">股號</th>
+                            <th class="p-2 border text-right">總股息(TWD)</th>
+                            <th class="p-2 border text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dividend-table-body"></tbody>
+                </table>
+            </div>
         </section>
 
         <section id="emergency-section" class="pt-6 border-t border-gray-200">
@@ -111,7 +127,7 @@
     </div>
 
     <div id="input-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+        <div class="bg-white p-6 rounded shadow-lg w-full max-md">
             <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
             <div class="space-y-4">
                 <input type="number" id="input-amount" placeholder="金額" class="w-full p-2 border rounded">
@@ -153,76 +169,72 @@
             updateSummary();
             renderExchangeTable();
             renderEmergencyTable();
+            renderDividendTable();
         }
 
-        // === 換匯計算邏輯 (TWD / 銀行賣出價 = JPY) ===
-        function addExchangeRecord() {
-            const date = document.getElementById('ex-date').value;
-            const twd = parseFloat(document.getElementById('ex-twd').value);
-            const rate = parseFloat(document.getElementById('ex-rate').value);
-
-            if (!date || isNaN(twd) || isNaN(rate) || rate === 0) {
-                alert("請完整填寫正確的換匯資訊！");
-                return;
-            }
-
-            const record = { id: Date.now(), date, twd, rate, jpy: Math.floor(twd / rate) };
-            data.exchange.push(record);
-            localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
-            
-            document.getElementById('ex-twd').value = '';
-            renderExchangeTable();
-        }
-
-        function deleteExchangeRecord(id) {
-            data.exchange = data.exchange.filter(r => r.id !== id);
-            localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
-            renderExchangeTable();
-        }
-
-        function renderExchangeTable() {
-            const tbody = document.getElementById('exchange-body');
-            tbody.innerHTML = '';
-            let totalJpy = 0;
-
-            data.exchange.forEach(r => {
-                totalJpy += r.jpy;
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="px-4 py-3">${r.date}</td>
-                        <td class="px-4 py-3">${r.twd.toLocaleString()}</td>
-                        <td class="px-4 py-3">${r.rate.toFixed(4)}</td>
-                        <td class="px-4 py-3 font-bold text-blue-600">${r.jpy.toLocaleString()}</td>
-                        <td class="px-4 py-3 text-right"><button onclick="deleteExchangeRecord(${r.id})" class="text-red-500 hover:underline">刪除</button></td>
-                    </tr>
-                `;
-            });
-            document.getElementById('total-jpy-sum').innerText = totalJpy.toLocaleString();
-        }
-
+        // === 核心：更新總結 (加入扣除換匯台幣) ===
         function updateSummary() {
+            // 1. 計算收入項
             const dailySaved = data.checked.size * savingPerDay;
             const extraSaved = Object.values(data.extra).reduce((a, b) => a + Number(b), 0);
             const divSaved = data.dividend.reduce((sum, r) => sum + r.totalDividend, 0);
+            
+            // 2. 計算急用金債務 (提領 - 歸還)
             const totalWithdrawn = data.emergency.filter(r => r.type === 'withdraw').reduce((sum, r) => sum + r.amount, 0);
             const totalRepaid = data.emergency.filter(r => r.type === 'repay').reduce((sum, r) => sum + r.amount, 0);
             const debt = totalWithdrawn - totalRepaid;
 
-            const totalSavedTwd = dailySaved + extraSaved + divSaved - debt;
+            // 3. 計算已換出的台幣總額
+            const totalExchangedTwd = data.exchange.reduce((sum, r) => sum + (r.twd || 0), 0);
+
+            // 4. 計算剩餘總台幣 = (每日存 + 額外 + 股息) - 債務 - 已換出的台幣
+            const remainingTwd = dailySaved + extraSaved + divSaved - debt - totalExchangedTwd;
+
+            // 5. 計算應存進度
             const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const targetTwd = totalDays * savingPerDay;
             const progress = ((dailySaved / targetTwd) * 100).toFixed(2);
 
-            document.getElementById('summary').innerHTML = `
-                總金額：<span class="text-green-600">${totalSavedTwd.toLocaleString()}</span> 元 
-                <span class="text-sm text-gray-500">(應存進度：${progress}%)</span>
-            `;
-            
+            // 更新介面
+            document.getElementById('summary').innerHTML = `總金額 (剩餘台幣)：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
+            document.getElementById('progress-text').innerText = `應存進度：${progress}% (目標：${targetTwd.toLocaleString()} 元)`;
             document.getElementById('outstanding-amount').innerText = debt.toLocaleString();
+            document.getElementById('total-exchanged-twd').innerText = totalExchangedTwd.toLocaleString();
+            
             renderStockList();
         }
 
-        // === 股息快速填入 ===
+        // === 換匯紀錄功能 ===
+        function addExchangeRecord() {
+            const date = document.getElementById('ex-date').value;
+            const twd = parseFloat(document.getElementById('ex-twd').value);
+            const rate = parseFloat(document.getElementById('ex-rate').value);
+            if (!date || isNaN(twd) || isNaN(rate) || rate === 0) { alert("請填寫正確資訊"); return; }
+            const record = { id: Date.now(), date, twd, rate, jpy: Math.floor(twd / rate) };
+            data.exchange.push(record);
+            localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
+            renderExchangeTable();
+            updateSummary(); // 換匯後立即更新總金額
+            document.getElementById('ex-twd').value = '';
+        }
+        function deleteExchangeRecord(id) {
+            data.exchange = data.exchange.filter(r => r.id !== id);
+            localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
+            renderExchangeTable();
+            updateSummary(); // 刪除後立即更新總金額
+        }
+        function renderExchangeTable() {
+            const tbody = document.getElementById('exchange-body');
+            tbody.innerHTML = '';
+            let totalJpy = 0;
+            data.exchange.forEach(r => {
+                totalJpy += r.jpy;
+                tbody.innerHTML += `<tr><td class="px-4 py-3">${r.date}</td><td class="px-4 py-3">${r.twd.toLocaleString()}</td><td class="px-4 py-3">${r.rate.toFixed(4)}</td><td class="px-4 py-3 font-bold text-blue-600">${r.jpy.toLocaleString()}</td><td class="px-4 py-3 text-right"><button onclick="deleteExchangeRecord(${r.id})" class="text-red-500">刪除</button></td></tr>`;
+            });
+            document.getElementById('total-jpy-sum').innerText = totalJpy.toLocaleString();
+        }
+
+        // === 股息與其他功能 (保持原樣) ===
         window.quickFillStock = (id, rate) => {
             document.getElementById('stock-id').value = id;
             document.getElementById('dividend-per-share').value = rate;
@@ -230,29 +242,43 @@
             document.getElementById('ex-dividend-date').value = today;
             document.getElementById('payout-date').value = today;
         };
-
-        // === 急用金刪除功能 ===
-        function deleteEmergencyRecord(index) {
-            if(confirm("確定要刪除這筆紀錄嗎？")) {
-                data.emergency.splice(index, 1);
-                localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
-                renderEmergencyTable();
-                updateSummary();
+        document.getElementById('dividend-form').onsubmit = (e) => {
+            e.preventDefault();
+            const record = {
+                id: Date.now(),
+                payoutDate: document.getElementById('payout-date').value,
+                stockID: document.getElementById('stock-id').value,
+                totalDividend: Math.floor(document.getElementById('shares-held').value * document.getElementById('dividend-per-share').value)
+            };
+            data.dividend.push(record);
+            data.stock.set(record.stockID, { dividendPerShare: document.getElementById('dividend-per-share').value });
+            localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
+            localStorage.setItem(keys.stock, JSON.stringify(Array.from(data.stock.entries())));
+            updateSummary(); renderDividendTable(); e.target.reset();
+        };
+        function deleteDividendRecord(id) {
+            if(confirm("確定刪除？")) {
+                data.dividend = data.dividend.filter(r => r.id !== id);
+                localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
+                updateSummary(); renderDividendTable();
             }
         }
-
+        function renderDividendTable() {
+            const tbody = document.getElementById('dividend-table-body');
+            const sortedRecords = [...data.dividend].sort((a, b) => new Date(b.payoutDate) - new Date(a.payoutDate));
+            tbody.innerHTML = sortedRecords.map(r => `<tr><td class="p-2 border">${r.payoutDate}</td><td class="p-2 border">${r.stockID}</td><td class="p-2 border text-right">${r.totalDividend.toLocaleString()}</td><td class="p-2 border text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-500 text-xs">刪除</button></td></tr>`).join('');
+        }
+        function renderStockList() {
+            const body = document.getElementById('stock-info-table-body');
+            body.innerHTML = Array.from(data.stock.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([id, info]) => `<tr><td class="p-2 border bg-gray-50 font-medium">${id}</td><td class="p-2 border">參考股息：${info.dividendPerShare}</td></tr>`).join('');
+        }
+        function deleteEmergencyRecord(index) {
+            if(confirm("確定刪除？")) { data.emergency.splice(index, 1); localStorage.setItem(keys.emergency, JSON.stringify(data.emergency)); renderEmergencyTable(); updateSummary(); }
+        }
         function renderEmergencyTable() {
             const body = document.getElementById('emergency-fund-table-body');
-            body.innerHTML = data.emergency.map((r, index) => `
-                <tr>
-                    <td class="p-2 border text-center">${r.date}</td>
-                    <td class="p-2 border text-center ${r.type === 'withdraw' ? 'text-red-500' : 'text-blue-500'}">${r.type === 'withdraw' ? '提領' : '歸還'}</td>
-                    <td class="p-2 border text-right">${r.amount.toLocaleString()}</td>
-                    <td class="p-2 border text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-400 hover:text-red-600">刪除</button></td>
-                </tr>
-            `).join('');
+            body.innerHTML = data.emergency.map((r, index) => `<tr><td class="p-2 border text-center">${r.date}</td><td class="p-2 border text-center ${r.type === 'withdraw' ? 'text-red-500' : 'text-blue-500'}">${r.type === 'withdraw' ? '提領' : '歸還'}</td><td class="p-2 border text-right">${r.amount.toLocaleString()}</td><td class="p-2 border text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-400">刪除</button></td></tr>`).join('');
         }
-
         function renderMonths() {
             const container = document.getElementById('month-buttons');
             let curr = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -266,13 +292,11 @@
                 curr.setMonth(curr.getMonth() + 1);
             }
         }
-
         function toggleMonth(m) {
             const id = `month-${m.getFullYear()}-${m.getMonth()}`;
             let el = document.getElementById(id);
             if (!el) {
-                el = document.createElement('div');
-                el.id = id;
+                el = document.createElement('div'); el.id = id;
                 el.className = "mt-4 p-4 bg-gray-50 rounded day-grid border";
                 const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
                 for(let d=1; d<=daysInMonth; d++) {
@@ -283,8 +307,7 @@
                         dayBtn.className = `p-2 border text-center cursor-pointer rounded ${data.checked.has(dateStr) ? 'bg-green-600 text-white' : 'bg-white'}`;
                         dayBtn.innerText = d;
                         dayBtn.onclick = () => {
-                            if(data.checked.has(dateStr)) data.checked.delete(dateStr);
-                            else data.checked.add(dateStr);
+                            if(data.checked.has(dateStr)) data.checked.delete(dateStr); else data.checked.add(dateStr);
                             localStorage.setItem(keys.checked, JSON.stringify([...data.checked]));
                             dayBtn.className = `p-2 border text-center cursor-pointer rounded ${data.checked.has(dateStr) ? 'bg-green-600 text-white' : 'bg-white'}`;
                             updateSummary();
@@ -296,21 +319,6 @@
                 document.getElementById('all-months').appendChild(el);
             } else { el.remove(); }
         }
-
-        document.getElementById('dividend-form').onsubmit = (e) => {
-            e.preventDefault();
-            const record = {
-                stockID: document.getElementById('stock-id').value,
-                totalDividend: Math.floor(document.getElementById('shares-held').value * document.getElementById('dividend-per-share').value)
-            };
-            data.dividend.push(record);
-            data.stock.set(record.stockID, { dividendPerShare: document.getElementById('dividend-per-share').value });
-            localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
-            localStorage.setItem(keys.stock, JSON.stringify(Array.from(data.stock.entries())));
-            updateSummary();
-            e.target.reset();
-        };
-
         let currentAction = '';
         window.showInputModal = (title, action) => {
             currentAction = action;
@@ -325,20 +333,10 @@
             if(amt > 0) {
                 data.emergency.push({ type: currentAction, amount: amt, date: document.getElementById('input-date').value });
                 localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
-                updateSummary();
-                renderEmergencyTable();
-                hideInputModal();
+                updateSummary(); renderEmergencyTable(); hideInputModal();
                 document.getElementById('input-amount').value = '';
             }
         };
-
-        function renderStockList() {
-            const list = Array.from(data.stock.entries()).sort((a,b) => a[0].localeCompare(b[0]));
-            const body = document.getElementById('stock-info-table-body');
-            body.innerHTML = list.map(([id, info]) => `
-                <tr><td class="p-2 border">${id}</td><td class="p-2 border">參考股息：${info.dividendPerShare}</td></tr>
-            `).join('');
-        }
 
         init();
     </script>

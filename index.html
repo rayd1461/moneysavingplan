@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>2026 存錢與旅費明細工具</title>
+    <title>2026 儲蓄與資產管理明細</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,11 +18,11 @@
 
     <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-10 space-y-10">
         <header class="text-center space-y-2 border-b pb-6">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800">2026 存錢與旅費明細工具</h1>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800">2026 存錢與資產明細工具</h1>
             <div id="summary" class="text-2xl sm:text-3xl font-bold text-green-600">
-                目前剩餘台幣總額：0 元
+                目前可用餘額：0 元
             </div>
-            <div id="progress-text" class="text-slate-500 text-sm sm:text-base">
+            <div id="progress-text" class="text-slate-500 text-sm sm:text-base italic">
                 進度載入中...
             </div>
         </header>
@@ -35,32 +35,20 @@
             <div id="all-months"></div>
         </section>
 
-        <section class="bg-amber-50 p-6 rounded-xl border border-amber-100">
-            <h2 class="text-2xl font-bold text-amber-900 mb-4 flex items-center">
-                <span class="mr-2">✈️</span> 旅程取款明細 (從存款拿出)
+        <section class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+            <h2 class="text-2xl font-bold text-amber-900 mb-2 flex items-center">
+                <span class="mr-2">✈️</span> 旅遊支出統計
             </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-6">
-                <div>
-                    <label class="block text-sm font-bold text-amber-700">取款日期</label>
-                    <input type="date" id="travel-date" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5">
+            <p class="text-sm text-amber-700 mb-4">此處紀錄已支出的旅遊總金額（明細由外部網頁統計）。</p>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <div class="w-full">
+                    <label class="block text-xs font-bold text-amber-800 uppercase">更新旅費總支出 (TWD)</label>
+                    <input type="number" id="travel-total-input" placeholder="輸入目前旅費總額" class="mt-1 block w-full border-amber-200 rounded-lg p-3 text-lg font-bold text-amber-900">
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-amber-700">旅程名稱/用途</label>
-                    <input type="text" id="travel-name" placeholder="如：買機票、換日幣現鈔" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-amber-700">取出台幣金額</label>
-                    <input type="number" id="travel-amount" placeholder="金額" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5">
-                </div>
-                <button onclick="addTravelRecord()" class="bg-amber-600 text-white font-bold py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md">新增支出明細</button>
+                <button onclick="updateTravelTotal()" class="w-full sm:w-48 bg-amber-600 text-white font-bold py-3 rounded-lg hover:bg-amber-700 transition shadow-md mt-5">更新總額</button>
             </div>
-            <div class="overflow-x-auto border rounded-lg bg-white">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-amber-100 font-bold border-b border-amber-200">
-                        <tr><th class="p-3 text-left">日期</th><th class="p-3 text-left">旅程用途</th><th class="p-3 text-right text-red-600">支出台幣</th><th class="p-3 text-center">操作</th></tr>
-                    </thead>
-                    <tbody id="travel-body" class="divide-y"></tbody>
-                </table>
+            <div class="mt-4 text-xl font-bold text-amber-900">
+                旅費累計支出：<span id="display-travel-total">0</span> 元
             </div>
         </section>
 
@@ -68,13 +56,13 @@
             <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
                 <span class="mr-2">📈</span> 股息收入全明細
             </h2>
-            <form id="dividend-form" class="bg-slate-50 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 shadow-inner border border-slate-200">
+            <form id="dividend-form" class="bg-slate-50 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 border border-slate-200">
                 <input type="text" id="stock-id" placeholder="股號/股名" required class="p-2.5 border rounded-lg">
                 <input type="date" id="ex-dividend-date" placeholder="除息日" required class="p-2.5 border rounded-lg">
                 <input type="date" id="payout-date" placeholder="入帳日" required class="p-2.5 border rounded-lg">
                 <input type="number" id="shares-held" placeholder="持有股數" required class="p-2.5 border rounded-lg">
-                <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股息" required class="p-2.5 border rounded-lg">
-                <button type="submit" class="bg-green-600 text-white font-bold py-2.5 rounded-lg hover:bg-green-700 transition">儲存股息紀錄</button>
+                <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股利" required class="p-2.5 border rounded-lg">
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-2.5 rounded-lg hover:bg-green-700 transition">儲存股息紀錄</button>
             </form>
             <div class="overflow-x-auto border rounded-xl">
                 <table class="min-w-full text-sm text-left">
@@ -96,19 +84,19 @@
 
         <section class="border-t pt-8">
             <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
-                <span class="mr-2">🆘</span> 臨時急用金紀錄
+                <span class="mr-2">🆘</span> 臨時急用金紀錄明細
             </h2>
             <div class="flex gap-4 mb-4">
                 <button onclick="showInputModal('提領', 'withdraw')" class="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md">急用提領</button>
                 <button onclick="showInputModal('歸還', 'repay')" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 shadow-md">資金歸還</button>
             </div>
             <div class="text-sm font-bold text-red-600 mb-4 italic">目前待補齊總欠款：<span id="outstanding-amount">0</span> 元</div>
-            <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+            <div class="overflow-x-auto border rounded-xl bg-white">
                 <table class="min-w-full text-sm">
                     <thead class="bg-slate-100 font-bold border-b text-slate-700">
                         <tr>
-                            <th class="p-3 text-left">紀錄日期</th>
-                            <th class="p-3 text-left">異動類別</th>
+                            <th class="p-3 text-left">變動日期</th>
+                            <th class="p-3 text-left">類別</th>
                             <th class="p-3 text-right">台幣金額</th>
                             <th class="p-3 text-center">操作</th>
                         </tr>
@@ -128,7 +116,7 @@
             </div>
             <div class="mt-8 flex justify-end gap-3">
                 <button onclick="hideInputModal()" class="px-5 py-2 text-slate-500 font-medium">取消</button>
-                <button id="modal-save-btn" class="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700 transition">確認儲存</button>
+                <button id="modal-save-btn" class="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700">確認儲存</button>
             </div>
         </div>
     </div>
@@ -143,74 +131,55 @@
             checked: "saving_checked_days",
             emergency: "saving_emergency_fund",
             dividend: "saving_dividend_records",
-            travel: "saving_travel_expenses"
+            travelTotal: "saving_travel_total_amount" // 僅儲存總額
         };
 
         let data = {
             checked: new Set(JSON.parse(localStorage.getItem(keys.checked)) || []),
             emergency: JSON.parse(localStorage.getItem(keys.emergency)) || [],
             dividend: JSON.parse(localStorage.getItem(keys.dividend)) || [],
-            travel: JSON.parse(localStorage.getItem(keys.travel)) || []
+            travelTotal: parseFloat(localStorage.getItem(keys.travelTotal)) || 0
         };
 
         function init() {
             renderMonths();
             renderEmergencyTable();
             renderDividendTable();
-            renderTravelTable();
+            document.getElementById('display-travel-total').innerText = data.travelTotal.toLocaleString();
+            document.getElementById('travel-total-input').value = data.travelTotal;
             updateSummary();
         }
 
-        // === 2. 計算剩餘可用總額 ===
+        // === 2. 核心計算邏輯 ===
         function updateSummary() {
             const dailySaved = data.checked.size * savingPerDay;
             const divSaved = data.dividend.reduce((sum, r) => sum + (Number(r.totalDividend) || 0), 0);
             
-            // 欠債計算 (提領 - 歸還)
+            // 欠債計算
             const debt = data.emergency.reduce((sum, r) => sum + (r.type === 'withdraw' ? r.amount : -r.amount), 0);
-            // 旅程支出總計
-            const totalTravelSpent = data.travel.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+            
+            // 剩餘可用台幣 = (存錢 + 股息) - 欠債 - 旅遊總支出
+            const remainingTwd = dailySaved + divSaved - debt - data.travelTotal;
 
-            // 總額公式
-            const remainingTwd = dailySaved + divSaved - debt - totalTravelSpent;
-
-            // 進度計算
             const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const targetTwd = totalDays * savingPerDay;
             const progress = ((dailySaved / targetTwd) * 100).toFixed(2);
 
-            document.getElementById('summary').innerHTML = `目前剩餘台幣總額：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
-            document.getElementById('progress-text').innerText = `2026 存錢進度：${progress}% (目標：${targetTwd.toLocaleString()} 元)`;
+            document.getElementById('summary').innerHTML = `目前可用餘額：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
+            document.getElementById('progress-text').innerText = `2026 儲蓄達成率：${progress}% (目標：${targetTwd.toLocaleString()} 元)`;
             document.getElementById('outstanding-amount').innerText = debt.toLocaleString();
         }
 
-        // === 3. 旅費功能模組 ===
-        function addTravelRecord() {
-            const date = document.getElementById('travel-date').value;
-            const name = document.getElementById('travel-name').value;
-            const amount = parseFloat(document.getElementById('travel-amount').value);
-            if (!date || !name || !amount) return alert("請填寫完整資訊");
-            
-            data.travel.push({ id: Date.now(), date, name, amount });
-            localStorage.setItem(keys.travel, JSON.stringify(data.travel));
-            renderTravelTable(); 
+        // === 3. 旅遊支出更新 ===
+        function updateTravelTotal() {
+            const val = parseFloat(document.getElementById('travel-total-input').value) || 0;
+            data.travelTotal = val;
+            localStorage.setItem(keys.travelTotal, data.travelTotal);
+            document.getElementById('display-travel-total').innerText = data.travelTotal.toLocaleString();
             updateSummary();
-            document.getElementById('travel-name').value = '';
-            document.getElementById('travel-amount').value = '';
-        }
-        function deleteTravelRecord(id) {
-            data.travel = data.travel.filter(r => r.id !== id);
-            localStorage.setItem(keys.travel, JSON.stringify(data.travel));
-            renderTravelTable(); updateSummary();
-        }
-        function renderTravelTable() {
-            const body = document.getElementById('travel-body');
-            body.innerHTML = data.travel.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r => `
-                <tr><td class="p-3">${r.date}</td><td class="p-3 font-medium text-slate-700">${r.name}</td><td class="p-3 text-right font-bold text-red-600">-${r.amount.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteTravelRecord(${r.id})" class="text-red-400 hover:underline">刪除</button></td></tr>
-            `).join('');
         }
 
-        // === 4. 股息明細模組 ===
+        // === 4. 股息模組 ===
         document.getElementById('dividend-form').onsubmit = (e) => {
             e.preventDefault();
             const record = {
@@ -234,19 +203,19 @@
         function renderDividendTable() {
             const body = document.getElementById('dividend-table-body');
             body.innerHTML = data.dividend.sort((a,b)=>new Date(b.payoutDate)-new Date(a.payoutDate)).map(r => `
-                <tr><td class="p-3">${r.payoutDate}</td><td class="p-3 text-slate-400 text-xs">${r.exDate}</td><td class="p-3 font-bold text-slate-800">${r.stockID}</td><td class="p-3">${Number(r.shares).toLocaleString()}</td><td class="p-3">${r.dps}</td><td class="p-3 text-right font-bold text-green-600">${r.totalDividend.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-400">刪除</button></td></tr>
+                <tr><td class="p-3">${r.payoutDate}</td><td class="p-3 text-slate-400 text-xs">${r.exDate}</td><td class="p-3 font-bold text-slate-800">${r.stockID}</td><td class="p-3">${Number(r.shares).toLocaleString()}</td><td class="p-3">${r.dps}</td><td class="p-3 text-right font-bold text-green-600">${r.totalDividend.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-400 hover:underline">刪除</button></td></tr>
             `).join('');
         }
 
-        // === 5. 急用金明細模組 (修正不顯示的問題) ===
+        // === 5. 緊急急用金明細模組 ===
         function renderEmergencyTable() {
             const body = document.getElementById('emergency-fund-table-body');
             if (data.emergency.length === 0) {
-                body.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">目前尚無急用金紀錄</td></tr>';
+                body.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">尚無變動明細紀錄</td></tr>';
                 return;
             }
             body.innerHTML = data.emergency.sort((a,b)=>new Date(b.date)-new Date(a.date)).map((r, index) => `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 transition">
                     <td class="p-3 text-slate-600">${r.date}</td>
                     <td class="p-3 font-bold ${r.type==='withdraw'?'text-red-500':'text-blue-500'}">${r.type==='withdraw'?'急用提領':'資金歸還'}</td>
                     <td class="p-3 text-right font-semibold">${r.amount.toLocaleString()}</td>
@@ -255,14 +224,14 @@
             `).join('');
         }
         function deleteEmergencyRecord(i) {
-            if(confirm("確定刪除這筆紀錄？")) {
+            if(confirm("確定刪除這筆變動紀錄？")) {
                 data.emergency.splice(i, 1);
                 localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
                 renderEmergencyTable(); updateSummary();
             }
         }
 
-        // === 6. 打卡與彈窗功能 ===
+        // === 6. 打卡與彈窗 ===
         function renderMonths() {
             const container = document.getElementById('month-buttons');
             let curr = new Date(startDate.getFullYear(), startDate.getMonth(), 1);

@@ -3,163 +3,181 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>每日30元存錢計畫 & 換匯參考</title>
+    <title>存錢與旅費規劃工具 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 0.5rem; }
+        .day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 0.5rem; }
         @media (min-width: 640px) { .day-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
     </style>
 </head>
-<body class="bg-gray-100 p-4 sm:p-8">
+<body class="bg-slate-50 p-4 sm:p-8">
 
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 space-y-8">
-        <header class="text-center">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">存錢與分批換匯計畫</h1>
-            <div id="summary" class="text-xl sm:text-2xl font-semibold text-green-600 mb-1">
-                總金額 (剩餘台幣)：0 元
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-10 space-y-10">
+        <header class="text-center space-y-2 border-b pb-6">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800">2026 存錢與換匯明細工具</h1>
+            <div id="summary" class="text-2xl sm:text-3xl font-bold text-green-600">
+                剩餘總額：0 元
             </div>
-            <div id="progress-text" class="text-sm text-gray-500 italic">
-                進度載入中...
+            <div id="progress-text" class="text-slate-500 font-medium text-sm sm:text-base">
+                每日存錢進度載入中...
             </div>
         </header>
 
-        <div id="month-buttons" class="flex flex-wrap justify-center gap-2"></div>
-        <div id="all-months"></div>
+        <section>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
+                <span class="mr-2">📅</span> 每日 30 元儲蓄紀錄
+            </h2>
+            <div id="month-buttons" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+            <div id="all-months"></div>
+        </section>
 
-        <hr class="border-gray-200">
-
-        <section id="exchange-section">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">分批換匯紀錄表</h2>
-            <div class="bg-blue-50 p-4 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+        <section class="bg-blue-50/50 p-6 rounded-xl">
+            <h2 class="text-2xl font-bold text-blue-900 mb-4 flex items-center">
+                <span class="mr-2">💴</span> 分批換匯明細
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">換匯日期</label>
-                    <input type="date" id="ex-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <label class="block text-sm font-bold text-blue-700">換匯日期</label>
+                    <input type="date" id="ex-date" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5 shadow-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">支出台幣 (TWD)</label>
-                    <input type="number" id="ex-twd" placeholder="金額" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <label class="block text-sm font-bold text-blue-700">支出台幣 (TWD)</label>
+                    <input type="number" id="ex-twd" placeholder="輸入台幣" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5 shadow-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">銀行賣出價</label>
-                    <input type="number" id="ex-rate" step="0.0001" placeholder="0.2011" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    <label class="block text-sm font-bold text-blue-700">獲得日幣 (JPY)</label>
+                    <input type="number" id="ex-jpy" placeholder="輸入日幣" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5 shadow-sm">
                 </div>
-                <button onclick="addExchangeRecord()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition">新增紀錄</button>
+                <button onclick="addExchangeRecord()" class="bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md">新增換匯</button>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full text-sm border-collapse">
+                    <thead class="bg-blue-100/50 text-blue-900">
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">日期</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">支出台幣</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">匯率</th>
-                            <th class="px-4 py-3 text-left font-medium text-blue-600">獲得日幣</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase">操作</th>
+                            <th class="p-3 text-left border-b">日期</th>
+                            <th class="p-3 text-left border-b">支出台幣 (支出項)</th>
+                            <th class="p-3 text-left border-b">獲得日幣 (現有)</th>
+                            <th class="p-3 text-center border-b">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="exchange-body" class="bg-white"></tbody>
+                    <tbody id="exchange-body" class="divide-y"></tbody>
                 </table>
             </div>
-            <div class="mt-4 flex justify-between items-center px-2">
-                <div class="text-lg font-bold text-blue-800">已換得日幣總計：<span id="total-jpy-sum">0</span> JPY</div>
-                <div class="text-xs text-gray-400 italic">換匯累計支出：<span id="total-exchanged-twd">0</span> TWD</div>
+            <div class="mt-4 text-right text-blue-900 font-bold">
+                日幣持有總計：<span id="total-jpy-sum" class="text-xl">0</span> JPY
             </div>
         </section>
 
-        <hr class="border-gray-200">
-
-        <section id="dividend-section">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">股息發放紀錄</h2>
-            <div class="mb-4 flex flex-wrap gap-2">
-                <span class="text-sm self-center text-gray-500">快速填入：</span>
-                <button onclick="quickFillStock('0050', 1.0)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">0050</button>
-                <button onclick="quickFillStock('0056', 0.79)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">0056</button>
-                <button onclick="quickFillStock('00878', 0.55)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">00878</button>
-                <button onclick="quickFillStock('00919', 0.72)" class="px-3 py-1 bg-gray-200 rounded-full text-xs hover:bg-gray-300 transition">00919</button>
+        <section class="bg-amber-50 p-6 rounded-xl">
+            <h2 class="text-2xl font-bold text-amber-900 mb-4 flex items-center">
+                <span class="mr-2">✈️</span> 旅程取款紀錄 (從存款拿錢)
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-6">
+                <input type="date" id="travel-date" class="border-slate-200 rounded-lg p-2.5">
+                <input type="text" id="travel-name" placeholder="旅程名稱 (如：東京冬季之旅)" class="border-slate-200 rounded-lg p-2.5">
+                <input type="number" id="travel-amount" placeholder="取出台幣金額" class="border-slate-200 rounded-lg p-2.5">
+                <button onclick="addTravelRecord()" class="bg-amber-600 text-white font-bold py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md">新增支出紀錄</button>
             </div>
-            <form id="dividend-form" class="bg-gray-50 p-4 rounded-lg space-y-3 mb-6">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <input type="text" id="stock-id" placeholder="股名/股號" required class="p-2 border rounded">
-                    <input type="date" id="ex-dividend-date" required class="p-2 border rounded">
-                    <input type="date" id="payout-date" required class="p-2 border rounded">
-                    <input type="number" id="shares-held" placeholder="持有股數" required class="p-2 border rounded">
-                    <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股利" required class="p-2 border rounded">
-                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">紀錄股息收入</button>
-                </div>
-            </form>
+            <div class="overflow-x-auto border rounded-lg bg-white">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-amber-100">
+                        <tr><th class="p-3 text-left">日期</th><th class="p-3 text-left">旅程名稱</th><th class="p-3 text-right text-red-600">取出台幣</th><th class="p-3 text-center">操作</th></tr>
+                    </thead>
+                    <tbody id="travel-body" class="divide-y"></tbody>
+                </table>
+            </div>
+        </section>
 
-            <h3 class="font-bold mb-2 text-gray-700">股息歷史紀錄</h3>
-            <div class="overflow-x-auto mb-4 border rounded">
-                <table class="min-w-full text-sm text-left divide-y divide-gray-200">
-                    <thead class="bg-gray-50"><tr><th class="p-2">入帳日</th><th class="p-2">標的</th><th class="p-2 text-right">實領金額</th><th class="p-2 text-center">操作</th></tr></thead>
+        <section>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
+                <span class="mr-2">📈</span> 股息明細全紀錄
+            </h2>
+            <div class="mb-4 flex flex-wrap gap-2">
+                <button onclick="quickFillStock('0050', 1.0)" class="px-3 py-1 bg-slate-100 rounded-full text-xs hover:bg-slate-200">0050</button>
+                <button onclick="quickFillStock('0056', 0.79)" class="px-3 py-1 bg-slate-100 rounded-full text-xs hover:bg-slate-200">0056</button>
+                <button onclick="quickFillStock('00878', 0.55)" class="px-3 py-1 bg-slate-100 rounded-full text-xs hover:bg-slate-200">00878</button>
+                <button onclick="quickFillStock('00919', 0.72)" class="px-3 py-1 bg-slate-100 rounded-full text-xs hover:bg-slate-200">00919</button>
+            </div>
+            <form id="dividend-form" class="bg-slate-50 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <input type="text" id="stock-id" placeholder="股名/股號" required class="p-2.5 border rounded-lg">
+                <input type="date" id="ex-dividend-date" placeholder="除息日" required class="p-2.5 border rounded-lg">
+                <input type="date" id="payout-date" placeholder="入帳日" required class="p-2.5 border rounded-lg">
+                <input type="number" id="shares-held" placeholder="持有股數" required class="p-2.5 border rounded-lg">
+                <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股利" required class="p-2.5 border rounded-lg">
+                <button type="submit" class="bg-green-600 text-white font-bold py-2.5 rounded-lg hover:bg-green-700">儲存完整明細</button>
+            </form>
+            <div class="overflow-x-auto border rounded-xl">
+                <table class="min-w-full text-sm text-left divide-y divide-slate-200">
+                    <thead class="bg-slate-50 text-slate-600">
+                        <tr>
+                            <th class="p-3 font-bold border-b">入帳日</th>
+                            <th class="p-3 font-bold border-b">除息日</th>
+                            <th class="p-3 font-bold border-b">標的</th>
+                            <th class="p-3 font-bold border-b">股數</th>
+                            <th class="p-3 font-bold border-b">每股股利</th>
+                            <th class="p-3 font-bold border-b text-right">實領總額</th>
+                            <th class="p-3 font-bold border-b text-center">操作</th>
+                        </tr>
+                    </thead>
                     <tbody id="dividend-table-body" class="bg-white"></tbody>
                 </table>
             </div>
-
-            <h3 class="font-bold mb-2 text-gray-700">已留存股票參考資訊</h3>
-            <div class="overflow-x-auto border rounded">
-                <table class="min-w-full text-sm divide-y divide-gray-200">
-                    <tbody id="stock-info-table-body" class="bg-white"></tbody>
-                </table>
-            </div>
         </section>
 
-        <section id="emergency-section" class="pt-6 border-t border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">臨時急用金</h2>
+        <section class="border-t pt-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">🆘 臨時急用金</h2>
             <div class="flex gap-4 mb-4">
-                <button onclick="showInputModal('提領', 'withdraw')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">提領</button>
-                <button onclick="showInputModal('歸還', 'repay')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">歸還</button>
+                <button onclick="showInputModal('提領', 'withdraw')" class="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md transition">急用提領</button>
+                <button onclick="showInputModal('歸還', 'repay')" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 shadow-md transition">資金歸還</button>
             </div>
-            <div class="text-sm text-gray-600 mb-2">未還款金額計：<span id="outstanding-amount" class="text-red-600 font-bold">0</span> 元</div>
-            <div class="overflow-x-auto border rounded">
-                <table class="min-w-full text-sm divide-y divide-gray-200">
-                    <thead class="bg-gray-50"><tr><th class="p-2">日期</th><th class="p-2">類型</th><th class="p-2">金額</th><th class="p-2">操作</th></tr></thead>
+            <div class="text-sm font-bold text-red-600 mb-4">目前待補齊欠款：<span id="outstanding-amount">0</span> 元</div>
+            <div class="overflow-x-auto border rounded-xl">
+                <table class="min-w-full text-sm divide-y divide-slate-200">
+                    <thead class="bg-slate-50"><tr><th class="p-3 text-left">日期</th><th class="p-3 text-left">類別</th><th class="p-3 text-right">金額</th><th class="p-3 text-center">操作</th></tr></thead>
                     <tbody id="emergency-fund-table-body" class="bg-white"></tbody>
                 </table>
             </div>
         </section>
     </div>
 
-    <div id="input-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+    <div id="input-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <h3 id="modal-title" class="text-2xl font-bold mb-6 text-slate-800"></h3>
             <div class="space-y-4">
-                <input type="number" id="input-amount" placeholder="金額" class="w-full p-2 border rounded">
-                <input type="date" id="input-date" class="w-full p-2 border rounded">
-                <input type="text" id="input-note" placeholder="備註" class="w-full p-2 border rounded">
+                <input type="number" id="input-amount" placeholder="輸入台幣金額" class="w-full p-3 border rounded-xl">
+                <input type="date" id="input-date" class="w-full p-3 border rounded-xl">
             </div>
-            <div class="mt-6 flex justify-end gap-3">
-                <button onclick="hideInputModal()" class="text-gray-500">取消</button>
-                <button id="modal-save-btn" class="bg-green-600 text-white px-4 py-2 rounded">儲存資料</button>
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="hideInputModal()" class="px-5 py-2 text-slate-500 font-medium">取消</button>
+                <button id="modal-save-btn" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold">儲存明細</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === 資料對接 Key ===
+        // === 1. 初始化基礎資料 (推展至 2026/12/31) ===
         const startDate = new Date("2025-05-27");
-        const endDate = new Date("2026-11-01");
+        const endDate = new Date("2026-12-31");
         const savingPerDay = 30;
 
         const keys = {
             checked: "saving_checked_days",
-            extra: "saving_monthly_extra",
             emergency: "saving_emergency_fund",
             dividend: "saving_dividend_records",
-            stock: "saving_stock_info",
-            exchange: "batch_exchange_records"
+            exchange: "batch_exchange_records",
+            travel: "saving_travel_expenses" // 新增旅費 Key
         };
 
         let data = {
             checked: new Set(JSON.parse(localStorage.getItem(keys.checked)) || []),
-            extra: JSON.parse(localStorage.getItem(keys.extra)) || {},
             emergency: JSON.parse(localStorage.getItem(keys.emergency)) || [],
             dividend: JSON.parse(localStorage.getItem(keys.dividend)) || [],
-            stock: new Map(JSON.parse(localStorage.getItem(keys.stock)) || []),
-            exchange: JSON.parse(localStorage.getItem(keys.exchange)) || []
+            exchange: JSON.parse(localStorage.getItem(keys.exchange)) || [],
+            travel: JSON.parse(localStorage.getItem(keys.travel)) || []
         };
 
         function init() {
@@ -167,139 +185,137 @@
             renderExchangeTable();
             renderEmergencyTable();
             renderDividendTable();
-            updateSummary(); // 最後更新總額
+            renderTravelTable();
+            updateSummary();
         }
 
-        // === 總額計算邏輯 ===
+        // === 2. 總額更新邏輯 (核心更動) ===
         function updateSummary() {
+            // 收入
             const dailySaved = data.checked.size * savingPerDay;
-            const extraSaved = Object.values(data.extra).reduce((a, b) => a + Number(b), 0);
-            const divSaved = data.dividend.reduce((sum, r) => sum + r.totalDividend, 0);
+            const divSaved = data.dividend.reduce((sum, r) => sum + (Number(r.totalDividend) || 0), 0);
             
-            const totalWithdrawn = data.emergency.filter(r => r.type === 'withdraw').reduce((sum, r) => sum + r.amount, 0);
-            const totalRepaid = data.emergency.filter(r => r.type === 'repay').reduce((sum, r) => sum + r.amount, 0);
-            const debt = totalWithdrawn - totalRepaid;
-
+            // 支出/債務
+            const debt = data.emergency.reduce((sum, r) => sum + (r.type === 'withdraw' ? r.amount : -r.amount), 0);
             const totalExchangedTwd = data.exchange.reduce((sum, r) => sum + (Number(r.twd) || 0), 0);
+            const totalTravelSpent = data.travel.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-            // 計算公式：$$總額 = (打卡 + 額外 + 股息) - 欠債 - 已換匯台幣$$
-            const remainingTwd = dailySaved + extraSaved + divSaved - debt - totalExchangedTwd;
+            // 總剩餘台幣 = (存 + 息) - (換匯 + 欠款 + 旅程拿出的錢)
+            const remainingTwd = dailySaved + divSaved - debt - totalExchangedTwd - totalTravelSpent;
 
             const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const targetTwd = totalDays * savingPerDay;
             const progress = ((dailySaved / targetTwd) * 100).toFixed(2);
 
-            document.getElementById('summary').innerHTML = `總金額 (剩餘台幣)：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
-            document.getElementById('progress-text').innerText = `應存達成率：${progress}% (目標：${targetTwd.toLocaleString()} 元)`;
+            document.getElementById('summary').innerHTML = `剩餘可用台幣：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
+            document.getElementById('progress-text').innerText = `2026 全年存錢達成率：${progress}% (目標：${targetTwd.toLocaleString()} 元)`;
             document.getElementById('outstanding-amount').innerText = debt.toLocaleString();
-            document.getElementById('total-exchanged-twd').innerText = totalExchangedTwd.toLocaleString();
-            
-            renderStockList(); // 更新參考資訊表
+            document.getElementById('total-jpy-sum').innerText = data.exchange.reduce((sum, r) => sum + r.jpy, 0).toLocaleString();
         }
 
-        // === 換匯功能 ===
+        // === 3. 換匯功能 (無匯率欄位版) ===
         function addExchangeRecord() {
             const date = document.getElementById('ex-date').value;
             const twd = parseFloat(document.getElementById('ex-twd').value);
-            const rate = parseFloat(document.getElementById('ex-rate').value);
-            if (!date || isNaN(twd) || !rate) return;
-            const record = { id: Date.now(), date, twd, rate, jpy: Math.floor(twd / rate) };
-            data.exchange.push(record);
+            const jpy = parseFloat(document.getElementById('ex-jpy').value);
+            if (!date || !twd || !jpy) return alert("請完整填寫日期與金額");
+            
+            data.exchange.push({ id: Date.now(), date, twd, jpy });
             localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
-            renderExchangeTable();
-            updateSummary();
+            renderExchangeTable(); updateSummary();
             document.getElementById('ex-twd').value = '';
+            document.getElementById('ex-jpy').value = '';
         }
         function deleteExchangeRecord(id) {
             data.exchange = data.exchange.filter(r => r.id !== id);
             localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
-            renderExchangeTable();
-            updateSummary();
+            renderExchangeTable(); updateSummary();
         }
         function renderExchangeTable() {
-            const tbody = document.getElementById('exchange-body');
-            tbody.innerHTML = '';
-            let totalJpy = 0;
-            data.exchange.forEach(r => {
-                totalJpy += r.jpy;
-                tbody.innerHTML += `<tr><td class="p-3">${r.date}</td><td class="p-3">${r.twd.toLocaleString()}</td><td class="p-3">${r.rate.toFixed(4)}</td><td class="p-3 font-bold text-blue-600">${r.jpy.toLocaleString()}</td><td class="p-3 text-right"><button onclick="deleteExchangeRecord(${r.id})" class="text-red-500">刪除</button></td></tr>`;
-            });
-            document.getElementById('total-jpy-sum').innerText = totalJpy.toLocaleString();
-        }
-
-        // === 股息與股票資訊 ===
-        window.quickFillStock = (id, rate) => {
-            document.getElementById('stock-id').value = id;
-            document.getElementById('dividend-per-share').value = rate;
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('ex-dividend-date').value = today;
-            document.getElementById('payout-date').value = today;
-        };
-
-        document.getElementById('dividend-form').onsubmit = (e) => {
-            e.preventDefault();
-            const sid = document.getElementById('stock-id').value;
-            const dps = document.getElementById('dividend-per-share').value;
-            const record = {
-                id: Date.now(),
-                payoutDate: document.getElementById('payout-date').value,
-                stockID: sid,
-                totalDividend: Math.floor(document.getElementById('shares-held').value * dps)
-            };
-            data.dividend.push(record);
-            data.stock.set(sid, { dividendPerShare: dps });
-            localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
-            localStorage.setItem(keys.stock, JSON.stringify(Array.from(data.stock.entries())));
-            updateSummary(); renderDividendTable(); e.target.reset();
-        };
-
-        function deleteDividendRecord(id) {
-            data.dividend = data.dividend.filter(r => r.id !== id);
-            localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
-            updateSummary(); renderDividendTable();
-        }
-
-        function renderDividendTable() {
-            const tbody = document.getElementById('dividend-table-body');
-            const sorted = [...data.dividend].sort((a,b) => new Date(b.payoutDate) - new Date(a.payoutDate));
-            tbody.innerHTML = sorted.map(r => `<tr><td class="p-2 border-b">${r.payoutDate}</td><td class="p-2 border-b">${r.stockID}</td><td class="p-2 border-b text-right">${r.totalDividend.toLocaleString()}</td><td class="p-2 border-b text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-500 text-xs">刪除</button></td></tr>`).join('');
-        }
-
-        function renderStockList() {
-            const list = Array.from(data.stock.entries()).sort((a,b) => a[0].localeCompare(b[0]));
-            const body = document.getElementById('stock-info-table-body');
-            body.innerHTML = list.map(([id, info]) => `<tr><td class="p-2 border-b bg-gray-50 font-medium">${id}</td><td class="p-2 border-b text-gray-600">參考股息：${info.dividendPerShare}</td></tr>`).join('');
-        }
-
-        // === 急用金管理 ===
-        function deleteEmergencyRecord(index) {
-            if(confirm("確定刪除這筆紀錄？")) {
-                data.emergency.splice(index, 1);
-                localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
-                renderEmergencyTable();
-                updateSummary();
-            }
-        }
-        function renderEmergencyTable() {
-            const body = document.getElementById('emergency-fund-table-body');
-            body.innerHTML = data.emergency.map((r, index) => `
+            const body = document.getElementById('exchange-body');
+            body.innerHTML = data.exchange.map(r => `
                 <tr>
-                    <td class="p-2 border-b text-center">${r.date}</td>
-                    <td class="p-2 border-b text-center ${r.type==='withdraw'?'text-red-500':'text-blue-500'}">${r.type==='withdraw'?'提領':'歸還'}</td>
-                    <td class="p-2 border-b text-right">${r.amount.toLocaleString()}</td>
-                    <td class="p-2 border-b text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-400">刪除</button></td>
+                    <td class="p-3 border-b">${r.date}</td>
+                    <td class="p-3 border-b">${r.twd.toLocaleString()} TWD</td>
+                    <td class="p-3 border-b font-bold text-blue-600">${r.jpy.toLocaleString()} JPY</td>
+                    <td class="p-3 border-b text-center"><button onclick="deleteExchangeRecord(${r.id})" class="text-red-400 hover:text-red-600">刪除</button></td>
                 </tr>
             `).join('');
         }
 
-        // === 打卡與月份 ===
+        // === 4. 旅費支出功能 (新增) ===
+        function addTravelRecord() {
+            const date = document.getElementById('travel-date').value;
+            const name = document.getElementById('travel-name').value;
+            const amount = parseFloat(document.getElementById('travel-amount').value);
+            if (!date || !name || !amount) return alert("請填寫完整旅費明細");
+            
+            data.travel.push({ id: Date.now(), date, name, amount });
+            localStorage.setItem(keys.travel, JSON.stringify(data.travel));
+            renderTravelTable(); updateSummary();
+            document.getElementById('travel-name').value = '';
+            document.getElementById('travel-amount').value = '';
+        }
+        function deleteTravelRecord(id) {
+            data.travel = data.travel.filter(r => r.id !== id);
+            localStorage.setItem(keys.travel, JSON.stringify(data.travel));
+            renderTravelTable(); updateSummary();
+        }
+        function renderTravelTable() {
+            const body = document.getElementById('travel-body');
+            body.innerHTML = data.travel.map(r => `
+                <tr><td class="p-3 border-b">${r.date}</td><td class="p-3 border-b">${r.name}</td><td class="p-3 border-b text-right text-red-600 font-bold">-${r.amount.toLocaleString()}</td><td class="p-3 border-b text-center"><button onclick="deleteTravelRecord(${r.id})" class="text-red-400">刪除</button></td></tr>
+            `).join('');
+        }
+
+        // === 5. 股息明細 (完整欄位版) ===
+        window.quickFillStock = (id, rate) => {
+            document.getElementById('stock-id').value = id;
+            document.getElementById('dividend-per-share').value = rate;
+        };
+        document.getElementById('dividend-form').onsubmit = (e) => {
+            e.preventDefault();
+            const record = {
+                id: Date.now(),
+                payoutDate: document.getElementById('payout-date').value,
+                exDate: document.getElementById('ex-dividend-date').value,
+                stockID: document.getElementById('stock-id').value,
+                shares: document.getElementById('shares-held').value,
+                dps: document.getElementById('dividend-per-share').value,
+                totalDividend: Math.floor(document.getElementById('shares-held').value * document.getElementById('dividend-per-share').value)
+            };
+            data.dividend.push(record);
+            localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
+            renderDividendTable(); updateSummary(); e.target.reset();
+        };
+        function deleteDividendRecord(id) {
+            data.dividend = data.dividend.filter(r => r.id !== id);
+            localStorage.setItem(keys.dividend, JSON.stringify(data.dividend));
+            renderDividendTable(); updateSummary();
+        }
+        function renderDividendTable() {
+            const body = document.getElementById('dividend-table-body');
+            body.innerHTML = data.dividend.sort((a,b)=>new Date(b.payoutDate)-new Date(a.payoutDate)).map(r => `
+                <tr>
+                    <td class="p-3 border-b">${r.payoutDate}</td>
+                    <td class="p-3 border-b text-slate-400">${r.exDate}</td>
+                    <td class="p-3 border-b font-medium">${r.stockID}</td>
+                    <td class="p-3 border-b">${Number(r.shares).toLocaleString()}</td>
+                    <td class="p-3 border-b">${r.dps}</td>
+                    <td class="p-3 border-b text-right font-bold text-green-600">${r.totalDividend.toLocaleString()}</td>
+                    <td class="p-3 border-b text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-400 text-xs">刪除</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // === 6. 急用金與月份 (維持原有邏輯但調整日期範圍) ===
         function renderMonths() {
             const container = document.getElementById('month-buttons');
             let curr = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
             while (curr <= endDate) {
                 const m = new Date(curr);
                 const btn = document.createElement('button');
-                btn.className = "px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300";
+                btn.className = "px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-xs hover:bg-slate-300";
                 btn.innerText = `${m.getFullYear()}/${m.getMonth()+1}`;
                 btn.onclick = () => toggleMonth(m);
                 container.appendChild(btn);
@@ -311,19 +327,19 @@
             let el = document.getElementById(id);
             if (!el) {
                 el = document.createElement('div'); el.id = id;
-                el.className = "mt-4 p-4 bg-gray-50 rounded day-grid border";
+                el.className = "mt-4 p-4 bg-white rounded-xl day-grid border shadow-inner";
                 const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
                 for(let d=1; d<=daysInMonth; d++) {
                     const date = new Date(m.getFullYear(), m.getMonth(), d);
                     if (date >= startDate && date <= endDate) {
                         const dateStr = date.toISOString().split('T')[0];
                         const dayBtn = document.createElement('div');
-                        dayBtn.className = `p-2 border text-center cursor-pointer rounded ${data.checked.has(dateStr) ? 'bg-green-600 text-white' : 'bg-white'}`;
+                        dayBtn.className = `p-2 border text-center cursor-pointer rounded-lg transition ${data.checked.has(dateStr) ? 'bg-green-600 text-white font-bold' : 'bg-slate-50 text-slate-400'}`;
                         dayBtn.innerText = d;
                         dayBtn.onclick = () => {
                             if(data.checked.has(dateStr)) data.checked.delete(dateStr); else data.checked.add(dateStr);
                             localStorage.setItem(keys.checked, JSON.stringify([...data.checked]));
-                            dayBtn.className = `p-2 border text-center cursor-pointer rounded ${data.checked.has(dateStr) ? 'bg-green-600 text-white' : 'bg-white'}`;
+                            dayBtn.className = `p-2 border text-center cursor-pointer rounded-lg transition ${data.checked.has(dateStr) ? 'bg-green-600 text-white font-bold' : 'bg-slate-50 text-slate-400'}`;
                             updateSummary();
                         };
                         el.appendChild(dayBtn);
@@ -334,26 +350,17 @@
             } else { el.remove(); }
         }
 
-        // === Modal 功能 ===
+        function renderEmergencyTable() {
+            const body = document.getElementById('emergency-fund-table-body');
+            body.innerHTML = data.emergency.map((r, index) => `<tr><td class="p-3 border-b">${r.date}</td><td class="p-3 border-b ${r.type==='withdraw'?'text-red-500':'text-blue-500'} font-bold">${r.type==='withdraw'?'提領':'歸還'}</td><td class="p-3 border-b text-right">${r.amount.toLocaleString()}</td><td class="p-3 border-b text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-300">刪除</button></td></tr>`).join('');
+        }
+        function deleteEmergencyRecord(i) { data.emergency.splice(i, 1); localStorage.setItem(keys.emergency, JSON.stringify(data.emergency)); renderEmergencyTable(); updateSummary(); }
         let currentAction = '';
-        window.showInputModal = (title, action) => {
-            currentAction = action;
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('input-modal').classList.remove('hidden');
-            document.getElementById('input-modal').classList.add('flex');
-        };
-        window.hideInputModal = () => document.getElementById('input-modal').classList.add('hidden');
+        window.showInputModal = (title, action) => { currentAction = action; document.getElementById('modal-title').innerText = title; document.getElementById('input-date').value = new Date().toISOString().split('T')[0]; document.getElementById('input-modal').classList.replace('hidden', 'flex'); };
+        window.hideInputModal = () => document.getElementById('input-modal').classList.replace('flex', 'hidden');
         document.getElementById('modal-save-btn').onclick = () => {
             const amt = parseInt(document.getElementById('input-amount').value);
-            if(amt > 0) {
-                data.emergency.push({ type: currentAction, amount: amt, date: document.getElementById('input-date').value });
-                localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
-                renderEmergencyTable(); 
-                updateSummary(); 
-                hideInputModal();
-                document.getElementById('input-amount').value = '';
-            }
+            if(amt > 0) { data.emergency.push({ type: currentAction, amount: amt, date: document.getElementById('input-date').value }); localStorage.setItem(keys.emergency, JSON.stringify(data.emergency)); renderEmergencyTable(); updateSummary(); hideInputModal(); document.getElementById('input-amount').value = ''; }
         };
 
         init();

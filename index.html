@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>2026 存錢與旅費計畫明細</title>
+    <title>2026 存錢與旅費明細工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,10 +20,10 @@
         <header class="text-center space-y-2 border-b pb-6">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800">2026 存錢與旅費明細工具</h1>
             <div id="summary" class="text-2xl sm:text-3xl font-bold text-green-600">
-                剩餘可用總額：0 元
+                目前剩餘台幣總額：0 元
             </div>
             <div id="progress-text" class="text-slate-500 text-sm sm:text-base">
-                每日存錢進度載入中...
+                進度載入中...
             </div>
         </header>
 
@@ -35,57 +35,29 @@
             <div id="all-months"></div>
         </section>
 
-        <section class="bg-blue-50/50 p-6 rounded-xl">
-            <h2 class="text-2xl font-bold text-blue-900 mb-4 flex items-center">
-                <span class="mr-2">💴</span> 分批換匯紀錄明細
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-6">
-                <div>
-                    <label class="block text-sm font-bold text-blue-700">換匯日期</label>
-                    <input type="date" id="ex-date" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5 shadow-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-blue-700">支出台幣 (TWD)</label>
-                    <input type="number" id="ex-twd" placeholder="輸入支出的台幣" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5 shadow-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-blue-700">換得日幣 (JPY)</label>
-                    <input type="number" id="ex-jpy" placeholder="輸入換得的日幣" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5 shadow-sm">
-                </div>
-                <button onclick="addExchangeRecord()" class="bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md">新增換匯明細</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-blue-100/50 text-blue-900 font-bold border-b-2 border-blue-200">
-                        <tr>
-                            <th class="p-3 text-left">換匯日期</th>
-                            <th class="p-3 text-left">支出台幣金額</th>
-                            <th class="p-3 text-left">獲得日幣金額</th>
-                            <th class="p-3 text-center">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="exchange-body" class="divide-y divide-blue-100"></tbody>
-                </table>
-            </div>
-            <div class="mt-4 text-right text-blue-900 font-bold">
-                手上日幣總計：<span id="total-jpy-sum" class="text-xl">0</span> JPY
-            </div>
-        </section>
-
-        <section class="bg-amber-50 p-6 rounded-xl">
+        <section class="bg-amber-50 p-6 rounded-xl border border-amber-100">
             <h2 class="text-2xl font-bold text-amber-900 mb-4 flex items-center">
-                <span class="mr-2">✈️</span> 旅程取款紀錄表
+                <span class="mr-2">✈️</span> 旅程取款明細 (從存款拿出)
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-6">
-                <input type="date" id="travel-date" class="border-slate-200 rounded-lg p-2.5">
-                <input type="text" id="travel-name" placeholder="用途 (如：預定飯店、機票)" class="border-slate-200 rounded-lg p-2.5">
-                <input type="number" id="travel-amount" placeholder="取出台幣金額" class="border-slate-200 rounded-lg p-2.5">
-                <button onclick="addTravelRecord()" class="bg-amber-600 text-white font-bold py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md">新增支出紀錄</button>
+                <div>
+                    <label class="block text-sm font-bold text-amber-700">取款日期</label>
+                    <input type="date" id="travel-date" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-amber-700">旅程名稱/用途</label>
+                    <input type="text" id="travel-name" placeholder="如：買機票、換日幣現鈔" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-amber-700">取出台幣金額</label>
+                    <input type="number" id="travel-amount" placeholder="金額" class="mt-1 block w-full border-slate-200 rounded-lg p-2.5">
+                </div>
+                <button onclick="addTravelRecord()" class="bg-amber-600 text-white font-bold py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md">新增支出明細</button>
             </div>
             <div class="overflow-x-auto border rounded-lg bg-white">
                 <table class="min-w-full text-sm">
                     <thead class="bg-amber-100 font-bold border-b border-amber-200">
-                        <tr><th class="p-3 text-left">日期</th><th class="p-3 text-left">旅程名稱/用途</th><th class="p-3 text-right text-red-600">支出台幣</th><th class="p-3 text-center">操作</th></tr>
+                        <tr><th class="p-3 text-left">日期</th><th class="p-3 text-left">旅程用途</th><th class="p-3 text-right text-red-600">支出台幣</th><th class="p-3 text-center">操作</th></tr>
                     </thead>
                     <tbody id="travel-body" class="divide-y"></tbody>
                 </table>
@@ -94,66 +66,75 @@
 
         <section>
             <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
-                <span class="mr-2">📈</span> 股息明細全紀錄
+                <span class="mr-2">📈</span> 股息收入全明細
             </h2>
-            <form id="dividend-form" class="bg-slate-50 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 shadow-inner">
+            <form id="dividend-form" class="bg-slate-50 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 shadow-inner border border-slate-200">
                 <input type="text" id="stock-id" placeholder="股號/股名" required class="p-2.5 border rounded-lg">
                 <input type="date" id="ex-dividend-date" placeholder="除息日" required class="p-2.5 border rounded-lg">
                 <input type="date" id="payout-date" placeholder="入帳日" required class="p-2.5 border rounded-lg">
-                <input type="number" id="shares-held" placeholder="持股數" required class="p-2.5 border rounded-lg">
-                <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股利" required class="p-2.5 border rounded-lg">
-                <button type="submit" class="bg-green-600 text-white font-bold py-2.5 rounded-lg hover:bg-green-700 transition">儲存股息明細</button>
+                <input type="number" id="shares-held" placeholder="持有股數" required class="p-2.5 border rounded-lg">
+                <input type="number" step="0.001" id="dividend-per-share" placeholder="每股股息" required class="p-2.5 border rounded-lg">
+                <button type="submit" class="bg-green-600 text-white font-bold py-2.5 rounded-lg hover:bg-green-700 transition">儲存股息紀錄</button>
             </form>
             <div class="overflow-x-auto border rounded-xl">
                 <table class="min-w-full text-sm text-left">
-                    <thead class="bg-slate-50 text-slate-700 font-bold border-b">
+                    <thead class="bg-slate-100 text-slate-700 font-bold border-b">
                         <tr>
-                            <th class="p-3">入帳日</th>
+                            <th class="p-3">入帳日期</th>
                             <th class="p-3 text-slate-400">除息日</th>
                             <th class="p-3">標的</th>
                             <th class="p-3">持有股數</th>
                             <th class="p-3">每股股利</th>
-                            <th class="p-3 text-right">實領總額</th>
+                            <th class="p-3 text-right">領取總額</th>
                             <th class="p-3 text-center">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="dividend-table-body" class="divide-y"></tbody>
+                    <tbody id="dividend-table-body" class="divide-y bg-white"></tbody>
                 </table>
             </div>
         </section>
 
         <section class="border-t pt-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-4">🆘 臨時急用金紀錄</h2>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
+                <span class="mr-2">🆘</span> 臨時急用金紀錄
+            </h2>
             <div class="flex gap-4 mb-4">
                 <button onclick="showInputModal('提領', 'withdraw')" class="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md">急用提領</button>
                 <button onclick="showInputModal('歸還', 'repay')" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 shadow-md">資金歸還</button>
             </div>
             <div class="text-sm font-bold text-red-600 mb-4 italic">目前待補齊總欠款：<span id="outstanding-amount">0</span> 元</div>
-            <div class="overflow-x-auto border rounded-xl">
+            <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
                 <table class="min-w-full text-sm">
-                    <thead class="bg-slate-100 font-bold border-b"><tr><th class="p-3 text-left">日期</th><th class="p-3 text-left">紀錄類別</th><th class="p-3 text-right">台幣金額</th><th class="p-3 text-center">操作</th></tr></thead>
-                    <tbody id="emergency-fund-table-body" class="bg-white"></tbody>
+                    <thead class="bg-slate-100 font-bold border-b text-slate-700">
+                        <tr>
+                            <th class="p-3 text-left">紀錄日期</th>
+                            <th class="p-3 text-left">異動類別</th>
+                            <th class="p-3 text-right">台幣金額</th>
+                            <th class="p-3 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emergency-fund-table-body" class="divide-y"></tbody>
                 </table>
             </div>
         </section>
     </div>
 
     <div id="input-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
             <h3 id="modal-title" class="text-2xl font-bold mb-6 text-slate-800 border-b pb-2"></h3>
             <div class="space-y-4">
-                <input type="number" id="input-amount" placeholder="金額 (TWD)" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                <input type="date" id="input-date" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="number" id="input-amount" placeholder="金額 (TWD)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="input-date" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="mt-8 flex justify-end gap-3">
                 <button onclick="hideInputModal()" class="px-5 py-2 text-slate-500 font-medium">取消</button>
-                <button id="modal-save-btn" class="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700 transition">儲存紀錄</button>
+                <button id="modal-save-btn" class="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-slate-700 transition">確認儲存</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === 1. 初始化資料與日期 (推展至 2026/12/31) ===
+        // === 1. 初始化設定 ===
         const startDate = new Date("2025-05-27");
         const endDate = new Date("2026-12-31");
         const savingPerDay = 30;
@@ -162,7 +143,6 @@
             checked: "saving_checked_days",
             emergency: "saving_emergency_fund",
             dividend: "saving_dividend_records",
-            exchange: "batch_exchange_records",
             travel: "saving_travel_expenses"
         };
 
@@ -170,74 +150,53 @@
             checked: new Set(JSON.parse(localStorage.getItem(keys.checked)) || []),
             emergency: JSON.parse(localStorage.getItem(keys.emergency)) || [],
             dividend: JSON.parse(localStorage.getItem(keys.dividend)) || [],
-            exchange: JSON.parse(localStorage.getItem(keys.exchange)) || [],
             travel: JSON.parse(localStorage.getItem(keys.travel)) || []
         };
 
         function init() {
             renderMonths();
-            renderExchangeTable();
             renderEmergencyTable();
             renderDividendTable();
             renderTravelTable();
             updateSummary();
         }
 
-        // === 2. 核心計算邏輯 (不再使用匯率 API) ===
+        // === 2. 計算剩餘可用總額 ===
         function updateSummary() {
-            // 收入總項
             const dailySaved = data.checked.size * savingPerDay;
             const divSaved = data.dividend.reduce((sum, r) => sum + (Number(r.totalDividend) || 0), 0);
             
-            // 扣除總項
+            // 欠債計算 (提領 - 歸還)
             const debt = data.emergency.reduce((sum, r) => sum + (r.type === 'withdraw' ? r.amount : -r.amount), 0);
-            const totalExchangedTwd = data.exchange.reduce((sum, r) => sum + (Number(r.twd) || 0), 0);
+            // 旅程支出總計
             const totalTravelSpent = data.travel.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-            // 最終計算
-            const remainingTwd = dailySaved + divSaved - debt - totalExchangedTwd - totalTravelSpent;
+            // 總額公式
+            const remainingTwd = dailySaved + divSaved - debt - totalTravelSpent;
 
             // 進度計算
             const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const targetTwd = totalDays * savingPerDay;
             const progress = ((dailySaved / targetTwd) * 100).toFixed(2);
 
-            document.getElementById('summary').innerHTML = `剩餘可用台幣：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
-            document.getElementById('progress-text').innerText = `2026 全年存錢進度：${progress}% (目標達成：${dailySaved.toLocaleString()} / ${targetTwd.toLocaleString()} 元)`;
+            document.getElementById('summary').innerHTML = `目前剩餘台幣總額：<span class="text-green-600">${remainingTwd.toLocaleString()}</span> 元`;
+            document.getElementById('progress-text').innerText = `2026 存錢進度：${progress}% (目標：${targetTwd.toLocaleString()} 元)`;
             document.getElementById('outstanding-amount').innerText = debt.toLocaleString();
-            document.getElementById('total-jpy-sum').innerText = data.exchange.reduce((sum, r) => sum + (Number(r.jpy) || 0), 0).toLocaleString();
         }
 
-        // === 3. 功能模組 ===
-        function addExchangeRecord() {
-            const date = document.getElementById('ex-date').value;
-            const twd = parseFloat(document.getElementById('ex-twd').value);
-            const jpy = parseFloat(document.getElementById('ex-jpy').value);
-            if (!date || !twd || !jpy) return alert("請填入完整換匯日期與金額");
-            data.exchange.push({ id: Date.now(), date, twd, jpy });
-            localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
-            renderExchangeTable(); updateSummary();
-        }
-        function deleteExchangeRecord(id) {
-            data.exchange = data.exchange.filter(r => r.id !== id);
-            localStorage.setItem(keys.exchange, JSON.stringify(data.exchange));
-            renderExchangeTable(); updateSummary();
-        }
-        function renderExchangeTable() {
-            const body = document.getElementById('exchange-body');
-            body.innerHTML = data.exchange.map(r => `
-                <tr><td class="p-3">${r.date}</td><td class="p-3">${r.twd.toLocaleString()} TWD</td><td class="p-3 font-bold text-blue-600">${r.jpy.toLocaleString()} JPY</td><td class="p-3 text-center"><button onclick="deleteExchangeRecord(${r.id})" class="text-red-400">刪除</button></td></tr>
-            `).join('');
-        }
-
+        // === 3. 旅費功能模組 ===
         function addTravelRecord() {
             const date = document.getElementById('travel-date').value;
             const name = document.getElementById('travel-name').value;
             const amount = parseFloat(document.getElementById('travel-amount').value);
-            if (!date || !name || !amount) return alert("請填寫完整支出明細");
+            if (!date || !name || !amount) return alert("請填寫完整資訊");
+            
             data.travel.push({ id: Date.now(), date, name, amount });
             localStorage.setItem(keys.travel, JSON.stringify(data.travel));
-            renderTravelTable(); updateSummary();
+            renderTravelTable(); 
+            updateSummary();
+            document.getElementById('travel-name').value = '';
+            document.getElementById('travel-amount').value = '';
         }
         function deleteTravelRecord(id) {
             data.travel = data.travel.filter(r => r.id !== id);
@@ -246,11 +205,12 @@
         }
         function renderTravelTable() {
             const body = document.getElementById('travel-body');
-            body.innerHTML = data.travel.map(r => `
-                <tr><td class="p-3">${r.date}</td><td class="p-3">${r.name}</td><td class="p-3 text-right font-bold text-red-600">-${r.amount.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteTravelRecord(${id})" class="text-red-300">刪除</button></td></tr>
+            body.innerHTML = data.travel.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r => `
+                <tr><td class="p-3">${r.date}</td><td class="p-3 font-medium text-slate-700">${r.name}</td><td class="p-3 text-right font-bold text-red-600">-${r.amount.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteTravelRecord(${r.id})" class="text-red-400 hover:underline">刪除</button></td></tr>
             `).join('');
         }
 
+        // === 4. 股息明細模組 ===
         document.getElementById('dividend-form').onsubmit = (e) => {
             e.preventDefault();
             const record = {
@@ -274,17 +234,42 @@
         function renderDividendTable() {
             const body = document.getElementById('dividend-table-body');
             body.innerHTML = data.dividend.sort((a,b)=>new Date(b.payoutDate)-new Date(a.payoutDate)).map(r => `
-                <tr><td class="p-3">${r.payoutDate}</td><td class="p-3 text-slate-400">${r.exDate}</td><td class="p-3 font-medium">${r.stockID}</td><td class="p-3">${Number(r.shares).toLocaleString()}</td><td class="p-3">${r.dps}</td><td class="p-3 text-right font-bold text-green-600">${r.totalDividend.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-400">刪除</button></td></tr>
+                <tr><td class="p-3">${r.payoutDate}</td><td class="p-3 text-slate-400 text-xs">${r.exDate}</td><td class="p-3 font-bold text-slate-800">${r.stockID}</td><td class="p-3">${Number(r.shares).toLocaleString()}</td><td class="p-3">${r.dps}</td><td class="p-3 text-right font-bold text-green-600">${r.totalDividend.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteDividendRecord(${r.id})" class="text-red-400">刪除</button></td></tr>
             `).join('');
         }
 
+        // === 5. 急用金明細模組 (修正不顯示的問題) ===
+        function renderEmergencyTable() {
+            const body = document.getElementById('emergency-fund-table-body');
+            if (data.emergency.length === 0) {
+                body.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">目前尚無急用金紀錄</td></tr>';
+                return;
+            }
+            body.innerHTML = data.emergency.sort((a,b)=>new Date(b.date)-new Date(a.date)).map((r, index) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 text-slate-600">${r.date}</td>
+                    <td class="p-3 font-bold ${r.type==='withdraw'?'text-red-500':'text-blue-500'}">${r.type==='withdraw'?'急用提領':'資金歸還'}</td>
+                    <td class="p-3 text-right font-semibold">${r.amount.toLocaleString()}</td>
+                    <td class="p-3 text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-300 hover:text-red-500">刪除</button></td>
+                </tr>
+            `).join('');
+        }
+        function deleteEmergencyRecord(i) {
+            if(confirm("確定刪除這筆紀錄？")) {
+                data.emergency.splice(i, 1);
+                localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
+                renderEmergencyTable(); updateSummary();
+            }
+        }
+
+        // === 6. 打卡與彈窗功能 ===
         function renderMonths() {
             const container = document.getElementById('month-buttons');
             let curr = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
             while (curr <= endDate) {
                 const m = new Date(curr);
                 const btn = document.createElement('button');
-                btn.className = "px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-xs hover:bg-slate-300 transition";
+                btn.className = "px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-xs hover:bg-slate-300";
                 btn.innerText = `${m.getFullYear()}/${m.getMonth()+1}`;
                 btn.onclick = () => toggleMonth(m);
                 container.appendChild(btn);
@@ -319,17 +304,22 @@
             } else { el.remove(); }
         }
 
-        function renderEmergencyTable() {
-            const body = document.getElementById('emergency-fund-table-body');
-            body.innerHTML = data.emergency.map((r, index) => `<tr><td class="p-3">${r.date}</td><td class="p-3 ${r.type==='withdraw'?'text-red-500':'text-blue-500'} font-bold">${r.type==='withdraw'?'提領':'歸還'}</td><td class="p-3 text-right">${r.amount.toLocaleString()}</td><td class="p-3 text-center"><button onclick="deleteEmergencyRecord(${index})" class="text-red-300">刪除</button></td></tr>`).join('');
-        }
-        function deleteEmergencyRecord(i) { data.emergency.splice(i, 1); localStorage.setItem(keys.emergency, JSON.stringify(data.emergency)); renderEmergencyTable(); updateSummary(); }
         let currentAction = '';
-        window.showInputModal = (title, action) => { currentAction = action; document.getElementById('modal-title').innerText = title; document.getElementById('input-date').value = new Date().toISOString().split('T')[0]; document.getElementById('input-modal').classList.replace('hidden', 'flex'); };
+        window.showInputModal = (title, action) => {
+            currentAction = action;
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('input-modal').classList.replace('hidden', 'flex');
+        };
         window.hideInputModal = () => document.getElementById('input-modal').classList.replace('flex', 'hidden');
         document.getElementById('modal-save-btn').onclick = () => {
             const amt = parseInt(document.getElementById('input-amount').value);
-            if(amt > 0) { data.emergency.push({ type: currentAction, amount: amt, date: document.getElementById('input-date').value }); localStorage.setItem(keys.emergency, JSON.stringify(data.emergency)); renderEmergencyTable(); updateSummary(); hideInputModal(); document.getElementById('input-amount').value = ''; }
+            if(amt > 0) {
+                data.emergency.push({ type: currentAction, amount: amt, date: document.getElementById('input-date').value });
+                localStorage.setItem(keys.emergency, JSON.stringify(data.emergency));
+                renderEmergencyTable(); updateSummary(); hideInputModal();
+                document.getElementById('input-amount').value = '';
+            }
         };
 
         init();
